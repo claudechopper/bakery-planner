@@ -787,13 +787,13 @@ function renderInventory() {
         <div class="product-name" style="${p.nameStyle||''}">${p.name}</div>
         <div class="stock-row">
           <input type="number" inputmode="numeric" class="stock-input ci-1" placeholder="0"
-            value="${v.c1||''}" oninput="updateCol('${p.id}',0,this.value)" onfocus="this.select()">
+            value="${v.c1||''}" oninput="updateCol('${p.id}',0,this.value)" onfocus="this.select()" onkeydown="if(event.key==='Enter'){event.preventDefault();advanceFocus(this);}">
           <input type="number" inputmode="numeric" class="stock-input ci-2" placeholder="0"
-            value="${v.c2||''}" oninput="updateCol('${p.id}',1,this.value)" onfocus="this.select()">
+            value="${v.c2||''}" oninput="updateCol('${p.id}',1,this.value)" onfocus="this.select()" onkeydown="if(event.key==='Enter'){event.preventDefault();advanceFocus(this);}">
           <input type="number" inputmode="numeric" class="stock-input ci-3" placeholder="0"
-            value="${v.c3||''}" oninput="updateCol('${p.id}',2,this.value)" onfocus="this.select()">
+            value="${v.c3||''}" oninput="updateCol('${p.id}',2,this.value)" onfocus="this.select()" onkeydown="if(event.key==='Enter'){event.preventDefault();advanceFocus(this);}">
           <input type="number" inputmode="numeric" class="stock-input ci-4" placeholder="0"
-            value="${v.c4||''}" oninput="updateCol('${p.id}',3,this.value)" onfocus="this.select()">
+            value="${v.c4||''}" oninput="updateCol('${p.id}',3,this.value)" onfocus="this.select()" onkeydown="if(event.key==='Enter'){event.preventDefault();advanceFocus(this);}">
           <div class="stock-total" id="tot_${p.id}">${v.total||0}</div>
         </div>
       </div>`;
@@ -802,6 +802,18 @@ function renderInventory() {
   });
   document.getElementById('inventoryList').innerHTML = html;
 }
+
+// Enter key in inventory inputs: move to next input (col → col, then next row)
+window.advanceFocus = function(input) {
+  const allInputs = [...document.querySelectorAll('#inventoryList .stock-input')];
+  const idx = allInputs.indexOf(input);
+  if (idx >= 0 && idx < allInputs.length - 1) {
+    allInputs[idx + 1].focus();
+    allInputs[idx + 1].select();
+  } else {
+    input.blur(); // last input on page — just confirm and dismiss
+  }
+};
 
 window.updateCol = function(id, col, val) {
   const wd = getWD();
