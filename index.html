@@ -156,7 +156,7 @@ body {
 .stock-input.ci-3 { background: #e9dcc8; }
 .stock-input.ci-4 { background: #ddd0b5; }
 .stock-input:focus { outline: none; border-color: var(--primary); background: white; }
-.stock-total { font-size: 20px; font-weight: 800; color: var(--primary); text-align: center; }
+.stock-total { font-size: 22px; font-weight: 900; color: #1a9e3f; text-align: center; text-shadow: 0 0 8px rgba(26,158,63,0.25); }
 
 /* BUTTONS */
 .btn {
@@ -498,7 +498,7 @@ const PRODUCTS = [
   {id:'carrot_cake',           name:'Carrot Cake',                 cat:'TREATS',         ppb:48, days:1, posAlias:['carrot cake']},
   {id:'cheesecake',            name:'Cheesecake (Assorted)',       cat:'TREATS',         ppb:12, days:2, posAlias:['cheesecake','cheese cake','new york cheesecake','ny cheesecake']},
   {id:'cherry_danish',         name:'Cherry Danish',               cat:'TREATS',         ppb:4,  days:2, posAlias:['cherry danish','danish cherry']},
-  {id:'cookie_dough_brownies', name:'Cookie Dough Brownies',       cat:'TREATS',         ppb:24, days:1, posAlias:['cookie dough brownie','cookie dough brownies','cookie dough']},
+  {id:'cookie_dough_brownies', name:'Cookie Dough Brownies',       cat:'TREATS',         ppb:24, days:1, posAlias:['cookie dough brownie','cookie dough brownies','cookie dough','cookie dough icing']},
   {id:'date_squares',          name:'Date Squares',                cat:'TREATS',         ppb:24, days:1, posAlias:['date square','date squares']},
   {id:'fudge_brownies',        name:'Fudge Brownies',              cat:'TREATS',         ppb:24, days:1, posAlias:['brownie fudge','fudge brownie','fudge brownies','brownie bar','fudge classic','fudge']},
   {id:'german_brownies',       name:'German Brownies',             cat:'TREATS',         ppb:24, days:1, posAlias:['german brownie','german brownies','german chocolate brownie','german']},
@@ -878,8 +878,7 @@ const CSV_SKIP = [
   'brownie','brownies',
   // Plain cookies — NOT cookie dough brownies
   'cookie','cookies',
-  // Icing/ingredient — not a finished product
-  'cookie dough icing',
+  // (cookie dough icing maps to cookie_dough_brownies via posAlias — not skipped)
   // Croissant menu item — not cheesecake
   'cheese croissant',
   // Cupcakes — not in our product catalog
