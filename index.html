@@ -75,6 +75,15 @@ body {
   color: var(--text-light); transition: all 0.15s; white-space: nowrap;
 }
 .week-tab.active { background: var(--primary); color: white; border-color: var(--primary); }
+.week-del {
+  display: inline-block; margin-left: 5px; padding: 1px 4px;
+  font-size: 11px; color: #bbb; border-radius: 4px;
+  line-height: 1; vertical-align: middle;
+  transition: all 0.15s;
+}
+.week-tab:not(.active) .week-del:hover { color: white; background: var(--danger); }
+.week-tab.active .week-del { color: rgba(255,255,255,0.6); }
+.week-tab.active .week-del:hover { color: white; background: rgba(255,255,255,0.25); }
 .tab-inner-pad { padding: 10px 14px 0; }
 
 /* SEARCH */
@@ -485,7 +494,7 @@ const PRODUCTS = [
   {id:'lava_cakes',            name:'Lava Cakes (Choc)',           cat:'TREATS',         ppb:16, days:2, posAlias:['lava cake','lava cakes','chocolate lava cake','lava']},
   {id:'macaroons',             name:'Macaroons (Reg)',             cat:'TREATS',         ppb:48, days:1, posAlias:['macaroon','macaroons']},
   {id:'nanaimo_bars',          name:'Nanaimo Bars',                cat:'TREATS',         ppb:24, days:1, posAlias:['nanaimo bar','nanaimo bars','nanaimo']},
-  {id:'pb_marshmallow',        name:'PB Marshmallow Square',       cat:'TREATS',         ppb:24, days:1, posAlias:['pb marshmallow','peanut butter marshmallow','marshmallow square','pb marshmallow square']},
+  {id:'pb_marshmallow',        name:'PB Marshmallow Square',       cat:'TREATS',         ppb:24, days:1, posAlias:['pb marshmallow','pb square','pb marshmallow square','peanut butter marshmallow','marshmallow square','peanut butter square','pb marshmallow squares','pb squares']},
   {id:'pound_cake',            name:'Pound Cake',                  cat:'TREATS',         ppb:12, days:1, posAlias:['pound cake']},
   {id:'strudel',               name:'Strudel',                     cat:'TREATS',         ppb:5,  days:2, posAlias:['strudel']},
   {id:'tiramisu',              name:'Tiramisu',                    cat:'TREATS',         ppb:1,  days:2, posAlias:['tiramisu']},
@@ -495,7 +504,7 @@ const PRODUCTS = [
   // PIES — Raspberry Rhubarb = red, Blueberry Peach = purple
   {id:'apple_crumble',         name:'Apple Crumble Pie',           cat:'PIES',           ppb:1,  days:1, posAlias:['apple crumble','apple crumble pie']},
   {id:'apple_pie',             name:'Apple Pie',                   cat:'PIES',           ppb:1,  days:1, posAlias:['apple pie','apple']},
-  {id:'blueberry_peach_pie',   name:'Blueberry Peach Pie',         cat:'PIES',           ppb:1,  days:1, nameStyle:'color:#6c3483;font-weight:700;', posAlias:['blueberry peach pie','blueberry peach','peach blueberry']},
+  {id:'blueberry_peach_pie',   name:'Blueberry Peach Pie',         cat:'PIES',           ppb:1,  days:1, nameStyle:'color:#6c3483;font-weight:700;', posAlias:['blueberry peach pie','blueberry peach','peach blueberry','blueberry & peach pie','blueberry and peach pie','blueberry & peach','blueberry and peach']},
   {id:'blueberry_pie',         name:'Blueberry Pie',               cat:'PIES',           ppb:1,  days:1, posAlias:['blueberry pie','blueberry']},
   {id:'cherry_pie',            name:'Cherry Pie',                  cat:'PIES',           ppb:1,  days:1, posAlias:['cherry pie','cherry']},
   {id:'mixed_berry_pie',       name:'Mixed Berry Pie',             cat:'PIES',           ppb:1,  days:1, posAlias:['mixed berry pie','mixed berry']},
@@ -508,8 +517,8 @@ const PRODUCTS = [
   {id:'beef_pot_pie',          name:'Beef Pot Pie',                cat:'SAVOURY',        ppb:1,  days:1, posAlias:['beef pot pie','beef pot']},
   {id:'chicken_pot_pie',       name:'Chicken Pot Pie',             cat:'SAVOURY',        ppb:1,  days:1, posAlias:['chicken pot pie','chicken pot']},
   {id:'lunch_pie_thai',        name:'Chicken Thai',                cat:'SAVOURY',        ppb:48, days:1, posAlias:['chicken thai','thai chicken','chicken thai pie','thai pie']},
-  {id:'lg_lasagna',            name:'Lg Lasagna',                  cat:'SAVOURY',        ppb:1,  days:1, posAlias:['lasagna','large lasagna','lg lasagna']},
-  {id:'lg_shepherds_pie',      name:"Lg Shepherd's Pie",           cat:'SAVOURY',        ppb:1,  days:1, posAlias:["shepherd's pie",'shepherds pie','large shepherd','lg shepherd']},
+  {id:'lg_lasagna',            name:'Lg Lasagna',                  cat:'SAVOURY',        ppb:1,  days:1, posAlias:['lasagna','lasagnas','large lasagna','lg lasagna','lg lasagnas','large lasagnas']},
+  {id:'lg_shepherds_pie',      name:"Lg Shepherd's Pie",           cat:'SAVOURY',        ppb:1,  days:1, posAlias:["shepherd's pie","shepherds pie","lg shepherd's pie","lg shepherds pie","lg sheppards pie","lg sheppard's pie","large sheppards pie","large shepherd's pie","large shepherds pie","large shepherd","lg shepherd"]},
   {id:'pizza_pocket_deluxe',   name:'Pizza Pocket (Deluxe)',       cat:'SAVOURY',        ppb:4,  days:1, posAlias:['pizza pocket deluxe','deluxe pizza pocket','deluxe pocket','pizza pocket']},
   {id:'pizza_pocket_pepp',     name:'Pizza Pocket (Pepperoni)',    cat:'SAVOURY',        ppb:4,  days:1, posAlias:['pizza pocket pepperoni','pepperoni pocket','pepperoni pizza pocket']},
   {id:'quiches',               name:'Quiches (Assorted)',          cat:'SAVOURY',        ppb:1,  days:1, posAlias:['quiche','quiches']},
@@ -517,9 +526,9 @@ const PRODUCTS = [
   {id:'sausage_roll_hot',      name:'Sausage Roll (Hot)',          cat:'SAVOURY',        ppb:20, days:1, posAlias:['hot sausage roll','sausage roll hot','hot sausage','spicy sausage roll']},
   {id:'sausage_roll_maple',    name:'Sausage Roll (Maple Cran)',   cat:'SAVOURY',        ppb:20, days:1, posAlias:['maple cran sausage roll','sausage roll maple','maple sausage','maple cranberry sausage','maple cran sausage','maple sausage roll']},
   {id:'sm_lasagna',            name:'Sm Lasagna',                  cat:'SAVOURY',        ppb:1,  days:1, posAlias:['small lasagna','sm lasagna']},
-  {id:'sm_shepherds_pie',      name:"Sm Shepherd's Pie",           cat:'SAVOURY',        ppb:1,  days:1, posAlias:['small shepherd','sm shepherd']},
+  {id:'sm_shepherds_pie',      name:"Sm Shepherd's Pie",           cat:'SAVOURY',        ppb:1,  days:1, posAlias:["sm shepherd's pie","sm shepherds pie","sm sheppards pie","sm sheppard's pie","small sheppards pie","small shepherd's pie","small shepherds pie","small shepherd","sm shepherd"]},
   {id:'lunch_pie_spinach',     name:'Spinach',                     cat:'SAVOURY',        ppb:76, days:1, posAlias:['spinach','spinach pie','spinach lunch pie']},
-  {id:'tortiere',              name:'Tortière',                    cat:'SAVOURY',        ppb:1,  days:1, posAlias:['tourtiere','tourtière','tortiere','tortière','meat pie']},
+  {id:'tortiere',              name:'Tortière',                    cat:'SAVOURY',        ppb:1,  days:1, posAlias:['tourtiere','tourtières','tourtieres','tourtière','tortiere','tortieres','tortière','tortieres','meat pie']},
   // BASES & PREP
   {id:'brownie_bases',         name:'Brownie Bases',               cat:'BASES & PREP',   ppb:1,  days:1, posAlias:['brownie base','brownie bases']},
   {id:'carrot_cake_bases',     name:'Carrot Cake Bases',           cat:'BASES & PREP',   ppb:1,  days:1, posAlias:['carrot cake base','carrot base']},
@@ -591,18 +600,38 @@ function getAdj() { return parseFloat(document.getElementById('adjPct')?.value) 
 function renderWeekTabs(containerId, onSelectFn) {
   const container = document.getElementById(containerId);
   if (!container) return;
+  const current = getWeekKey();
   const weeks = getRecentWeeks(5);
-  // Also include any saved weeks not in recent 5
   Object.keys(S.weeks).forEach(k => { if (!weeks.includes(k)) weeks.push(k); });
-  weeks.sort((a,b) => b.localeCompare(a)); // newest first
-  container.innerHTML = weeks.slice(0, 6).map(k => {
+  weeks.sort((a,b) => b.localeCompare(a));
+  container.innerHTML = weeks.slice(0, 7).map(k => {
     const isActive = k === activeWeek;
-    const hasSaved = S.weeks[k]?.savedAt;
-    const lbl = getWeekLabel(k);
-    const shortLbl = k === getWeekKey() ? `📅 This Week` : lbl.split(' – ')[0];
-    return `<button class="week-tab${isActive?' active':''}" onclick="(${onSelectFn})('${k}')">${shortLbl}${hasSaved?'':' ·'}</button>`;
+    const isCurrent = k === current;
+    const lbl = getWeekLabel(k); // "Mar 23 – Mar 29"
+    const tabLabel = isCurrent ? `📅 ${lbl}` : lbl;
+    const delBtn = !isCurrent
+      ? ` <span class="week-del" onclick="deleteWeek('${k}',event)" title="Delete this week">✕</span>`
+      : '';
+    return `<button class="week-tab${isActive?' active':''}" onclick="${onSelectFn}('${k}')">${tabLabel}${delBtn}</button>`;
   }).join('');
 }
+
+window.deleteWeek = function(key, event) {
+  event.stopPropagation();
+  const lbl = getWeekLabel(key);
+  if (!confirm(`Delete the week of ${lbl}?\n\nThis will permanently erase all inventory, sales, made and wasted data for that week. This cannot be undone.`)) return;
+  delete S.weeks[key];
+  persist();
+  if (activeWeek === key) {
+    activeWeek = getWeekKey();
+    ensureWeek(activeWeek);
+    renderInventory();
+  }
+  renderWeekTabs('invWeekTabs', 'selectWeek');
+  renderWeekTabs('prodWeekTabs', 'selectWeek');
+  if (document.getElementById('tab-production').classList.contains('active')) renderProduction();
+  showToast('🗑 Week deleted.');
+};
 
 // ============================================================
 // RAILWAY API SYNC
@@ -771,6 +800,24 @@ window.searchInventory = function(q) {
 };
 
 // ============================================================
+// CSV SPLIT / SKIP RULES
+// When the POS uses one name for multiple products, split evenly.
+// When the POS has a generic total that's already counted by individual entries, skip it.
+// ============================================================
+const CSV_SPLITS = [
+  // "DANISH" or "DANISHES" → 50% Blueberry Danish + 50% Cherry Danish
+  { aliases: ['danish','danishes'], targets: ['blueberry_danish','cherry_danish'] },
+  // "PASTRY POCKET" / "PASTRY POCKETS" → 50% Pepperoni + 50% Deluxe
+  { aliases: ['pastry pocket','pastry pockets','pizza pocket','pizza pockets'], targets: ['pizza_pocket_pepp','pizza_pocket_deluxe'] },
+];
+// These POS names represent totals already broken out by individual entries — ignore them
+const CSV_SKIP = [
+  'butter tarts','butter tart',
+  'sausage rolls','sausage roll',
+  'pizza pockets','pastry pockets',
+];
+
+// ============================================================
 // CSV UPLOAD — POS "Sales By Product" format + standard CSVs
 // ============================================================
 window.handleCSV = function(input) {
@@ -829,9 +876,7 @@ function parseCSV(text, fname) {
       if (!seen.has(key)) seen.set(key, { name: rawName, qty });
     });
     seen.forEach(({ name, qty }) => {
-      const prod = fuzzyMatch(name);
-      if (prod) { newSales[prod.id] = (newSales[prod.id]||0) + qty; matched++; }
-      else if (name.length > 2) unmatched.push(name);
+      applyCSVEntry(name, qty, newSales, unmatched, (m) => { matched += m; });
     });
   } else {
     const headers = splitCSVRow(lines[0], delim).map(h => h.replace(/['"]/g,'').toLowerCase());
@@ -846,9 +891,7 @@ function parseCSV(text, fname) {
       const cols = splitCSVRow(line, delim);
       const itemName = cols[nameCol]; const qty = parseFloat(cols[qtyCol]);
       if (!itemName || isNaN(qty) || qty < 0) return;
-      const prod = fuzzyMatch(itemName);
-      if (prod) { newSales[prod.id] = (newSales[prod.id]||0) + qty; matched++; }
-      else if (itemName.length > 2) unmatched.push(itemName);
+      applyCSVEntry(itemName, qty, newSales, unmatched, (m) => { matched += m; });
     });
   }
 
@@ -858,6 +901,28 @@ function parseCSV(text, fname) {
   const note = unmatched.length ? ` — ${unmatched.length} unrecognized: ${unmatched.slice(0,4).join(', ')}${unmatched.length>4?'…':''}` : '';
   showUploadStatus('success', `✅ ${matched} products loaded${isPOS?' (POS format)':''}${note}`);
   showToast(`📊 Sales loaded: ${matched} products`);
+}
+
+// Apply one CSV entry: handles split rules, skip rules, then fuzzy match
+function applyCSVEntry(name, qty, salesObj, unmatchedArr, addMatched) {
+  const n = name.toLowerCase().trim();
+
+  // Skip rule — generic totals already covered by individual entries
+  if (CSV_SKIP.includes(n)) return;
+
+  // Split rule — divide qty evenly among multiple products
+  const splitRule = CSV_SPLITS.find(s => s.aliases.includes(n));
+  if (splitRule) {
+    const share = qty / splitRule.targets.length;
+    splitRule.targets.forEach(id => { salesObj[id] = (salesObj[id]||0) + share; });
+    addMatched(splitRule.targets.length);
+    return;
+  }
+
+  // Normal fuzzy match
+  const prod = fuzzyMatch(name);
+  if (prod) { salesObj[prod.id] = (salesObj[prod.id]||0) + qty; addMatched(1); }
+  else if (name.length > 2) unmatchedArr.push(name);
 }
 
 function fuzzyMatch(name) {
@@ -954,9 +1019,9 @@ function renderPriority() {
     const isDone = !!checked[p.id];
     let subText, subClass;
     if (p.needed > 0) {
-      const pcsSpan = `<span style="color:var(--danger)">${p.needed} pcs</span>`;
+      const pcsSpan = `<span style="color:#c0392b;font-weight:800">${p.needed} pcs</span>`;
       const batchSpan = p.ppb > 1
-        ? ` — <span style="color:var(--warning);font-weight:700">${p.batches} batch${p.batches!==1?'es':''}</span>`
+        ? ` — <span style="color:#7d3c98;font-weight:800">${p.batches} batch${p.batches!==1?'es':''}</span>`
         : '';
       const twoDaySpan = p.days===2 ? ' <span style="color:var(--warning)">⚠️ 2-day</span>' : '';
       subText = `Make ${pcsSpan}${batchSpan}${twoDaySpan}`;
