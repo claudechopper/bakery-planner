@@ -601,13 +601,15 @@ function renderWeekTabs(containerId, onSelectFn) {
   const container = document.getElementById(containerId);
   if (!container) return;
   const current = getWeekKey();
-  const weeks = getRecentWeeks(5);
-  Object.keys(S.weeks).forEach(k => { if (!weeks.includes(k)) weeks.push(k); });
-  weeks.sort((a,b) => b.localeCompare(a));
-  container.innerHTML = weeks.slice(0, 7).map(k => {
+  // Only show the current week + weeks that actually exist in S.weeks
+  // (never auto-generate past weeks from calendar math — that's what caused delete to not stick)
+  const weekSet = new Set([current]);
+  Object.keys(S.weeks).forEach(k => weekSet.add(k));
+  const weeks = [...weekSet].sort((a,b) => b.localeCompare(a));
+  container.innerHTML = weeks.slice(0, 8).map(k => {
     const isActive = k === activeWeek;
     const isCurrent = k === current;
-    const lbl = getWeekLabel(k); // "Mar 23 – Mar 29"
+    const lbl = getWeekLabel(k);
     const tabLabel = isCurrent ? `📅 ${lbl}` : lbl;
     const delBtn = !isCurrent
       ? ` <span class="week-del" onclick="deleteWeek('${k}',event)" title="Delete this week">✕</span>`
@@ -616,12 +618,14 @@ function renderWeekTabs(containerId, onSelectFn) {
   }).join('');
 }
 
-window.deleteWeek = function(key, event) {
+window.deleteWeek = async function(key, event) {
   event.stopPropagation();
   const lbl = getWeekLabel(key);
-  if (!confirm(`Delete the week of ${lbl}?\n\nThis will permanently erase all inventory, sales, made and wasted data for that week. This cannot be undone.`)) return;
+  if (!confirm(`Delete the week of ${lbl}?\n\nThis will permanently remove all inventory, sales, made and wasted data for that week. This cannot be undone.`)) return;
   delete S.weeks[key];
-  persist();
+  persistLocal(); // save to localStorage immediately
+  // Push to Railway immediately (not via timer) so Railway doesn't restore it on next load
+  if (apiUrl) await pushToAPI();
   if (activeWeek === key) {
     activeWeek = getWeekKey();
     ensureWeek(activeWeek);
@@ -861,6 +865,7 @@ function parseCSV(text, fname) {
 
   const newSales = {};
   const unmatched = [];
+  const matchLog = []; // {posName, productName, qty, note}
   let matched = 0;
 
   if (isPOS) {
@@ -876,7 +881,7 @@ function parseCSV(text, fname) {
       if (!seen.has(key)) seen.set(key, { name: rawName, qty });
     });
     seen.forEach(({ name, qty }) => {
-      applyCSVEntry(name, qty, newSales, unmatched, (m) => { matched += m; });
+      applyCSVEntry(name, qty, newSales, unmatched, matchLog, (m) => { matched += m; });
     });
   } else {
     const headers = splitCSVRow(lines[0], delim).map(h => h.replace(/['"]/g,'').toLowerCase());
@@ -891,38 +896,89 @@ function parseCSV(text, fname) {
       const cols = splitCSVRow(line, delim);
       const itemName = cols[nameCol]; const qty = parseFloat(cols[qtyCol]);
       if (!itemName || isNaN(qty) || qty < 0) return;
-      applyCSVEntry(itemName, qty, newSales, unmatched, (m) => { matched += m; });
+      applyCSVEntry(itemName, qty, newSales, unmatched, matchLog, (m) => { matched += m; });
     });
   }
 
   getWD().sales = newSales;
   persist();
 
-  const note = unmatched.length ? ` — ${unmatched.length} unrecognized: ${unmatched.slice(0,4).join(', ')}${unmatched.length>4?'…':''}` : '';
-  showUploadStatus('success', `✅ ${matched} products loaded${isPOS?' (POS format)':''}${note}`);
+  // Build diagnostic panel
+  const matchedRows = matchLog
+    .filter(r => r.productName)
+    .sort((a,b) => b.qty - a.qty)
+    .map(r => `<tr style="border-bottom:1px solid #eee;">
+      <td style="padding:4px 8px;font-size:12px;color:#555;">${r.posName}</td>
+      <td style="padding:4px 8px;font-size:12px;font-weight:600;color:#2c1a0e;">${r.productName}</td>
+      <td style="padding:4px 8px;font-size:13px;font-weight:800;color:#7a4f2e;text-align:right;">${Math.round(r.qty)}</td>
+      ${r.note ? `<td style="padding:4px 8px;font-size:11px;color:#c07820;">${r.note}</td>` : '<td></td>'}
+    </tr>`).join('');
+  const skippedRows = matchLog.filter(r => r.skipped).map(r =>
+    `<span style="background:#f0f0f0;border-radius:4px;padding:2px 7px;font-size:11px;margin:2px;display:inline-block;">${r.posName} (${Math.round(r.qty)})</span>`
+  ).join('');
+  const unmatchedHtml = unmatched.length
+    ? `<div style="margin-top:8px;font-size:12px;color:#b03030;"><strong>Not recognized (${unmatched.length}):</strong> ${unmatched.join(', ')}</div>` : '';
+
+  const diagHtml = `
+    <div style="margin-top:8px;border:1px solid #b0d8c0;border-radius:8px;overflow:hidden;">
+      <div style="background:#e6f4ec;padding:8px 12px;font-size:13px;font-weight:700;color:#3d7a52;cursor:pointer;display:flex;justify-content:space-between;align-items:center;"
+           onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none';">
+        <span>✅ ${matched} items matched — tap to see full breakdown</span>
+        <span style="font-size:16px;">▾</span>
+      </div>
+      <div style="display:none;max-height:320px;overflow-y:auto;">
+        <table style="width:100%;border-collapse:collapse;">
+          <thead><tr style="background:#f5faf7;">
+            <th style="padding:5px 8px;font-size:11px;text-align:left;color:#3d7a52;">POS Name</th>
+            <th style="padding:5px 8px;font-size:11px;text-align:left;color:#3d7a52;">Matched To</th>
+            <th style="padding:5px 8px;font-size:11px;text-align:right;color:#3d7a52;">Qty</th>
+            <th style="padding:5px 8px;font-size:11px;color:#c07820;">Note</th>
+          </tr></thead>
+          <tbody>${matchedRows}</tbody>
+        </table>
+        ${skippedRows ? `<div style="padding:8px 12px;background:#f9f9f9;border-top:1px solid #eee;font-size:12px;color:#777;"><strong>Skipped (generic totals):</strong><br>${skippedRows}</div>` : ''}
+        ${unmatchedHtml ? `<div style="padding:8px 12px;background:#fef5f5;border-top:1px solid #eee;">${unmatchedHtml}</div>` : ''}
+      </div>
+    </div>`;
+
+  document.getElementById('uploadStatus').innerHTML = diagHtml;
   showToast(`📊 Sales loaded: ${matched} products`);
 }
 
 // Apply one CSV entry: handles split rules, skip rules, then fuzzy match
-function applyCSVEntry(name, qty, salesObj, unmatchedArr, addMatched) {
+// matchLog is populated for the diagnostic display
+function applyCSVEntry(name, qty, salesObj, unmatchedArr, matchLog, addMatched) {
   const n = name.toLowerCase().trim();
 
   // Skip rule — generic totals already covered by individual entries
-  if (CSV_SKIP.includes(n)) return;
+  if (CSV_SKIP.includes(n)) {
+    matchLog.push({ posName: name, qty, skipped: true, productName: null });
+    return;
+  }
 
   // Split rule — divide qty evenly among multiple products
   const splitRule = CSV_SPLITS.find(s => s.aliases.includes(n));
   if (splitRule) {
     const share = qty / splitRule.targets.length;
-    splitRule.targets.forEach(id => { salesObj[id] = (salesObj[id]||0) + share; });
+    splitRule.targets.forEach(id => {
+      salesObj[id] = (salesObj[id]||0) + share;
+      const prod = PRODUCTS.find(p => p.id === id);
+      matchLog.push({ posName: name, qty: share, productName: prod ? prod.name : id, note: `split ÷${splitRule.targets.length}` });
+    });
     addMatched(splitRule.targets.length);
     return;
   }
 
   // Normal fuzzy match
   const prod = fuzzyMatch(name);
-  if (prod) { salesObj[prod.id] = (salesObj[prod.id]||0) + qty; addMatched(1); }
-  else if (name.length > 2) unmatchedArr.push(name);
+  if (prod) {
+    salesObj[prod.id] = (salesObj[prod.id]||0) + qty;
+    matchLog.push({ posName: name, qty, productName: prod.name, note: '' });
+    addMatched(1);
+  } else if (name.length > 2) {
+    unmatchedArr.push(name);
+    matchLog.push({ posName: name, qty, productName: null, note: '' });
+  }
 }
 
 function fuzzyMatch(name) {
