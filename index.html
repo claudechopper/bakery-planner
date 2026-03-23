@@ -219,6 +219,7 @@ body {
 .priority-sub { font-size: 13px; margin-top: 1px; }
 .priority-sub.urgent { font-weight: 600; }
 .priority-sub.good { color: var(--success); font-weight: 600; }
+.priority-sub.edge { color: #b8860b; font-weight: 700; }
 .priority-sub.idle { color: var(--text-light); }
 .score-box { text-align: right; flex-shrink: 0; }
 .score-num { font-size: 22px; font-weight: 800; color: var(--primary); }
@@ -1168,7 +1169,12 @@ function renderPriority() {
     } else if (p.sold === 0 && p.effectiveSold === 0) {
       subText = 'No sales last week'; subClass = 'idle';
     } else {
-      subText = '✓ Well stocked'; subClass = 'good';
+      const surplus = p.inStock - (p.effectiveSold * adj) - getStockpile(p.id);
+      if (surplus < p.ppb) {
+        subText = '⚠️ On the edge — may need soon'; subClass = 'edge';
+      } else {
+        subText = '✓ Well stocked'; subClass = 'good';
+      }
     }
     const sc = p.scoreA >= 0 ? `+${Math.round(p.scoreA)}` : String(Math.round(p.scoreA));
     const nameHtml = `<span style="${p.nameStyle||''}">${p.name}</span>`;
