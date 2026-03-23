@@ -608,6 +608,30 @@ function getWasted(id)  { return getWD().wasted[id] || 0; }
 function getStockpile(id) { return S.stockpile[id] || 0; }
 function getAdj() { return parseFloat(document.getElementById('adjPct')?.value) || 1.20; }
 
+// Returns the week key immediately before the given key (or activeWeek if omitted)
+function getPrevWeekKey(key) {
+  const base = key || activeWeek;
+  const d = new Date(base + 'T12:00:00');
+  d.setDate(d.getDate() - 7);
+  return getWeekKey(d);
+}
+
+// Historical discrepancy:
+// Expected current stock = prevStock - prevSold - prevWasted + madeThisWeek
+// Discrepancy = currentStock - expected  (+ = surplus, - = loss)
+function calcDiscrepancy(id) {
+  const prevKey  = getPrevWeekKey();
+  const prevWD   = S.weeks[prevKey];
+  if (!prevWD) return null; // no previous week data yet
+  const prevStock  = prevWD.inventory[id]?.total || 0;
+  const prevSold   = prevWD.sales[id]   || 0;
+  const prevWasted = prevWD.wasted[id]  || 0;
+  const made       = getMade(id);
+  const currStock  = getInStock(id);
+  const expected   = prevStock - prevSold - prevWasted + made;
+  return currStock - expected;
+}
+
 function renderWeekTabs(containerId, onSelectFn) {
   const container = document.getElementById(containerId);
   if (!container) return;
@@ -1265,14 +1289,13 @@ function renderProduction() {
         batchesDisplay = needed > 0 ? batches : '—';
       }
 
-      // Discrepancy: made + inStock_prev - effectiveSold vs current inStock
-      // Simple version: if "made" entered → show made - effectiveSold (surplus from production)
-      // Otherwise fall back to stock change
+      // Historical discrepancy: currentStock - (prevStock - prevSold - prevWasted + madeThisWeek)
+      // + = unexplained surplus, - = unexplained loss, — = no prior week data yet
       let discStr = '—', discClass = 'td-disc-zero';
-      if (made > 0) {
-        const surplus = made - effectiveSold;
-        discStr = (surplus >= 0 ? '+' : '') + surplus;
-        discClass = surplus > 0 ? 'td-disc-neg' : surplus < 0 ? 'td-disc-pos' : 'td-disc-zero';
+      const disc = calcDiscrepancy(p.id);
+      if (disc !== null) {
+        discStr = (disc >= 0 ? '+' : '') + disc;
+        discClass = disc > 0 ? 'td-disc-neg' : disc < 0 ? 'td-disc-pos' : 'td-disc-zero';
       }
       const nameHtml = `<span style="${p.nameStyle||''}">${p.name}</span>`;
       html += `<tr data-name="${p.name.toLowerCase()}">
@@ -1323,10 +1346,10 @@ function updateProductionRow(id) {
   cells[4].textContent = needed > 0 ? needed : '✓';
   cells[5].textContent = needed > 0 ? batches : '—';
   let discStr = '—', discClass = 'td-disc-zero';
-  if (made > 0) {
-    const surplus = made - effectiveSold;
-    discStr = (surplus >= 0 ? '+' : '') + surplus;
-    discClass = surplus > 0 ? 'td-disc-neg' : surplus < 0 ? 'td-disc-pos' : 'td-disc-zero';
+  const disc = calcDiscrepancy(id);
+  if (disc !== null) {
+    discStr = (disc >= 0 ? '+' : '') + disc;
+    discClass = disc > 0 ? 'td-disc-neg' : disc < 0 ? 'td-disc-pos' : 'td-disc-zero';
   }
   cells[8].className = 'col-disc ' + discClass;
   cells[8].textContent = discStr;
