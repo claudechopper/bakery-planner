@@ -42,21 +42,19 @@ body {
   display: flex; z-index: 100; box-shadow: 0 -2px 12px rgba(0,0,0,0.08);
 }
 .tab-btn {
-  flex: 1; padding: 10px 4px 8px; border: none; background: none;
-  color: var(--text-light); font-size: 10px; font-weight: 600;
+  flex: 1; padding: 10px 4px 8px; border: none;
+  color: white; font-size: 10px; font-weight: 700;
   cursor: pointer; display: flex; flex-direction: column;
   align-items: center; gap: 3px; min-height: 54px; transition: all 0.15s;
+  opacity: 0.82;
 }
-.tab-btn.active { color: var(--primary); }
-.tab-btn svg { width: 22px; height: 22px; }
-/* Inventory button always stands out */
-#nav-inventory {
-  background: linear-gradient(to bottom, #c49070, #8a5832);
-  color: white; border-right: 2px solid var(--primary);
-  border-radius: 0 0 0 0;
-}
-#nav-inventory.active { background: linear-gradient(to bottom, #8a5832, #5a3018); }
-#nav-inventory svg { color: white; }
+.tab-btn.active { opacity: 1; filter: brightness(1.12); }
+.tab-btn svg { width: 22px; height: 22px; color: white; }
+/* Each tab its own colour */
+#nav-inventory  { background: linear-gradient(to bottom, #7a4f2e, #5a3318); }
+#nav-priority   { background: linear-gradient(to bottom, #1a6fb5, #134e82); }
+#nav-production { background: linear-gradient(to bottom, #2e8b57, #1d5c38); }
+#nav-settings   { background: linear-gradient(to bottom, #7b3fa0, #552a70); }
 
 /* CONTENT */
 .tab-content { display: none; padding: 0; }
@@ -458,7 +456,7 @@ input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
       <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
     </svg>
-    Inventory
+    Inventory (A.P.)
   </button>
   <button class="tab-btn" id="nav-priority" onclick="switchTab('priority')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -519,7 +517,7 @@ const PRODUCTS = [
   {id:'blueberry_peach_pie',   name:'Blueberry Peach Pie',         cat:'PIES',           ppb:1,  days:1, nameStyle:'color:#6c3483;font-weight:700;', posAlias:['blueberry peach pie','blueberry peach','peach blueberry','blueberry & peach pie','blueberry and peach pie','blueberry & peach','blueberry and peach']},
   {id:'blueberry_pie',         name:'Blueberry Pie',               cat:'PIES',           ppb:1,  days:1, posAlias:['blueberry pie','blueberry']},
   {id:'cherry_pie',            name:'Cherry Pie',                  cat:'PIES',           ppb:1,  days:1, posAlias:['cherry pie','cherry']},
-  {id:'mixed_berry_pie',       name:'Mixed Berry Pie',             cat:'PIES',           ppb:1,  days:1, posAlias:['mixed berry pie','mixed berry']},
+  {id:'mixed_berry_pie',       name:'Mixed Berry Pie',             cat:'PIES',           ppb:1,  days:1, posAlias:['mixed berry pie','mixed berry','mixed fruit pie','mixed fruit']},
   {id:'peach_pie',             name:'Peach Pie',                   cat:'PIES',           ppb:1,  days:1, posAlias:['peach pie','peach']},
   {id:'raspberry_pie',         name:'Raspberry Pie',               cat:'PIES',           ppb:1,  days:1, posAlias:['raspberry pie','raspberry']},
   {id:'rasp_rhubarb_pie',      name:'Raspberry Rhubarb Pie',       cat:'PIES',           ppb:1,  days:1, nameStyle:'color:#c0392b;font-weight:700;', posAlias:['raspberry rhubarb pie','raspberry rhubarb','rasp rhubarb','rhubarb raspberry']},
