@@ -535,12 +535,12 @@ const PRODUCTS = [
   {id:'pizza_pocket_pepp',     name:'Pizza Pocket (Pepperoni)',    cat:'SAVOURY',        ppb:4,  days:1, posAlias:['pizza pocket pepperoni','pepperoni pocket','pepperoni pizza pocket']},
   {id:'quiches',               name:'Quiches (Assorted)',          cat:'SAVOURY',        ppb:1,  days:1, posAlias:['quiche','quiches']},
   {id:'sausage_roll_garlic',   name:'Sausage Roll (Garlic)',       cat:'SAVOURY',        ppb:20, days:1, posAlias:['garlic sausage roll','sausage roll garlic','garlic sausage']},
-  {id:'sausage_roll_hot',      name:'Sausage Roll (Hot)',          cat:'SAVOURY',        ppb:20, days:1, posAlias:['hot sausage roll','sausage roll hot','hot sausage','spicy sausage roll']},
-  {id:'sausage_roll_maple',    name:'Sausage Roll (Maple Cran)',   cat:'SAVOURY',        ppb:20, days:1, posAlias:['maple cran sausage roll','sausage roll maple','maple sausage','maple cranberry sausage','maple cran sausage','maple sausage roll']},
+  {id:'sausage_roll_hot',      name:'Sausage Roll (Hot)',          cat:'SAVOURY',        ppb:20, days:1, posAlias:['hot sausage roll','sausage roll hot','hot sausage','spicy sausage roll','hot italian sausage roll','italian sausage roll']},
+  {id:'sausage_roll_maple',    name:'Sausage Roll (Maple Cran)',   cat:'SAVOURY',        ppb:20, days:1, posAlias:['maple cran sausage roll','sausage roll maple','maple sausage','maple cranberry sausage','maple cran sausage','maple sausage roll','maple cranberry sausage roll']},
   {id:'sm_lasagna',            name:'Sm Lasagna',                  cat:'SAVOURY',        ppb:1,  days:1, posAlias:['small lasagna','sm lasagna']},
   {id:'sm_shepherds_pie',      name:"Sm Shepherd's Pie",           cat:'SAVOURY',        ppb:1,  days:1, posAlias:["sm shepherd's pie","sm shepherds pie","sm sheppards pie","sm sheppard's pie","small sheppards pie","small shepherd's pie","small shepherds pie","small shepherd","sm shepherd"]},
-  {id:'lunch_pie_spinach',     name:'Spinach',                     cat:'SAVOURY',        ppb:76, days:1, posAlias:['spinach','spinach pie','spinach lunch pie']},
-  {id:'tortiere',              name:'Tortière',                    cat:'SAVOURY',        ppb:1,  days:1, posAlias:['tourtiere','tourtières','tourtieres','tourtière','tortiere','tortieres','tortière','tortieres','meat pie']},
+  {id:'lunch_pie_spinach',     name:'Spinach',                     cat:'SAVOURY',        ppb:76, days:1, posAlias:['spinach','spinach pie','spinach lunch pie','spinnach','spinach & feta pie','spinach and feta pie','spinach & feta','spinach and feta']},
+  {id:'tortiere',              name:'Tortière',                    cat:'SAVOURY',        ppb:1,  days:1, posAlias:['tourtiere','tourtières','tourtieres','tourtière','tortiere','tortieres','tortière','tortieres','meat pie','lg tortiere','lg tourtiere','large tortiere','large tourtiere']},
   // BASES & PREP
   {id:'brownie_bases',         name:'Brownie Bases',               cat:'BASES & PREP',   ppb:1,  days:1, derivedFrom:{type:'combined', products:['cookie_dough_brownies','fudge_brownies','german_brownies'], piecesPerBase:24}, posAlias:['brownie base','brownie bases']},
   {id:'carrot_cake_bases',     name:'Carrot Cake Bases',           cat:'BASES & PREP',   ppb:1,  days:1, derivedFrom:{type:'single', productId:'carrot_cake', pcsPerBatch:48, basesPerBatch:6}, posAlias:['carrot cake base','carrot base']},
@@ -1062,17 +1062,10 @@ function fuzzyMatch(name) {
     return containsProduct.sort((a,b) => b.name.length - a.name.length)[0];
   }
 
-  // 5. Word overlap — require 5+ char words to avoid short words like "cake" matching "cupcake"
-  const nWords = n.split(/[\s()+,\-]+/).filter(w => w.length >= 4);
-  let bestMatch = null, bestScore = 0;
-  for (const p of PRODUCTS) {
-    const pWords = p.name.toLowerCase().split(/\s+/).filter(w => w.length >= 5);
-    const hits = pWords.filter(pw => nWords.some(nw => nw.includes(pw) || pw.includes(nw)));
-    const score = hits.length / Math.max(pWords.length, 1);
-    if (hits.length >= 2 && score > bestScore) { bestScore = score; bestMatch = p; }
-    else if (hits.length === 1 && pWords.length <= 2 && score > bestScore) { bestScore = score; bestMatch = p; }
-  }
-  return bestMatch;
+  // No more fuzzy word overlap — it caused too many false positives
+  // (e.g. "LEMON BUTTERMILK PIE" matching "Butter Tart" via "butter" in "buttermilk")
+  // If an item doesn't match by posAlias, exact name, or direct containment, it's unmatched.
+  return null;
 }
 
 function showUploadStatus(type, msg) {
