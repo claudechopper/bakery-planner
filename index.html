@@ -236,6 +236,8 @@ body {
 
 /* PRODUCTION TABLE */
 .prod-cat-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text-light); padding: 10px 4px 5px; }
+.prod-cat-title.hidden, .prod-table-wrap.hidden { display: none; }
+.card.hidden { display: none; }
 .prod-table-wrap { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); overflow-x: auto; margin-bottom: 12px; }
 table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 680px; }
 thead th { padding: 9px 8px; text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.3px; font-weight: 700; white-space: nowrap; }
@@ -875,6 +877,11 @@ window.searchInventory = function(q) {
     const name = row.dataset.name || '';
     row.classList.toggle('hidden', term.length > 0 && !name.includes(term));
   });
+  // Hide category cards where every item is filtered out
+  document.querySelectorAll('#inventoryList .card').forEach(card => {
+    const hasVisible = [...card.querySelectorAll('.product-row')].some(r => !r.classList.contains('hidden'));
+    card.classList.toggle('hidden', term.length > 0 && !hasVisible);
+  });
 };
 
 // ============================================================
@@ -1365,6 +1372,14 @@ window.searchProduction = function(q) {
   const term = q.toLowerCase();
   document.querySelectorAll('#productionContent tr[data-name]').forEach(row => {
     row.classList.toggle('hidden', term.length > 0 && !row.dataset.name.includes(term));
+  });
+  // Hide category title + table when all their rows are filtered out
+  document.querySelectorAll('#productionContent .prod-cat-title').forEach(title => {
+    const wrap = title.nextElementSibling;
+    const hasVisible = wrap && [...wrap.querySelectorAll('tr[data-name]')].some(r => !r.classList.contains('hidden'));
+    const hide = term.length > 0 && !hasVisible;
+    title.classList.toggle('hidden', hide);
+    if (wrap) wrap.classList.toggle('hidden', hide);
   });
 };
 
