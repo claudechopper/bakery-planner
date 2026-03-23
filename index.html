@@ -201,6 +201,14 @@ tbody tr:nth-child(even) td { background: #faf8f5; }
 .settings-name { flex: 1; font-size: 14px; font-weight: 500; }
 .settings-input { width: 72px; padding: 7px; text-align: center; border: 1.5px solid var(--border); border-radius: 8px; font-size: 15px; font-weight: 600; background: var(--bg); }
 
+/* Railway URL Input */
+.url-input {
+  width: 100%; border: 1.5px solid var(--border); border-radius: 8px;
+  padding: 10px; font-size: 14px; background: var(--bg);
+  margin-bottom: 10px; color: var(--text);
+}
+.url-input:focus { outline: none; border-color: var(--primary); }
+
 /* MISC */
 .toast {
   position: fixed; top: 72px; left: 50%; transform: translateX(-50%);
@@ -224,7 +232,7 @@ input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer
     <div class="week-label" id="weekLabel"></div>
   </div>
   <div style="text-align:right;">
-    <div class="sync-badge live" id="syncBadge">⬥ Connected to Railway</div>
+    <div class="sync-badge" id="syncBadge">⬤ Local only</div>
   </div>
 </div>
 
@@ -232,12 +240,11 @@ input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer
 <div id="tab-inventory" class="tab-content active">
   <div class="upload-box">
     <h3>📊 Upload Weekly Sales (CSV)</h3>
-    <p>Export from your POS as <strong>CSV</strong> and upload. The app auto-matches items and syncs to all devices.</p>
+    <p>Export from your POS and upload. The app auto-matches items and syncs to all devices.</p>
     <input type="file" id="csvFile" accept=".csv,.txt" style="display:none" onchange="handleCSV(this)">
     <button class="btn btn-secondary btn-sm" onclick="document.getElementById('csvFile').click()">📁 Choose Sales CSV</button>
     <div class="csv-hint">
-      Any CSV with an item name column + quantity column works.<br>
-      Example: <em>Item Name, Units Sold</em>
+      Supports your POS "Sales By Product" CSV export format automatically.
     </div>
   </div>
   <div id="uploadStatus"></div>
@@ -280,12 +287,21 @@ input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer
   </div>
   <div class="card" style="margin-bottom:10px;">
     <div class="card-header" onclick="toggleCard(this.parentElement)">
-      <span>🚂 Railway Backend</span>
+      <span>🔗 Railway Sync Settings</span>
       <svg class="collapse-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
     </div>
     <div class="card-body" style="padding:14px;">
-      <p style="font-size:13px;color:var(--text-light);margin-bottom:12px;">Data is stored locally on this device. Deploy a Railway backend service to enable cross-device sync — see the code comment in the script for the integration point.</p>
-      <button class="btn btn-secondary btn-sm" style="width:100%;color:var(--danger);" onclick="clearAllData()">🗑 Clear All Data</button>
+      <p style="font-size:13px;color:var(--text-light);margin-bottom:12px;">
+        Enter your Railway app URL to sync data between your iPad, iPhone, and Mac. Found in your Railway project dashboard under "Settings → Domains".
+      </p>
+      <label style="font-size:13px;font-weight:700;display:block;margin-bottom:5px;">Railway URL</label>
+      <input type="url" id="railwayUrlInput" class="url-input"
+        placeholder="https://your-app.up.railway.app">
+      <div id="railwayStatus" style="font-size:13px;color:var(--text-light);margin-bottom:10px;"></div>
+      <button class="btn btn-primary btn-sm" style="margin-bottom:8px;" onclick="saveRailwayUrl()">
+        Connect &amp; Sync
+      </button>
+      <button class="btn btn-secondary btn-sm" style="color:var(--danger);" onclick="clearAllData()">🗑 Clear All Data</button>
     </div>
   </div>
 </div>
@@ -320,7 +336,6 @@ input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer
 </nav>
 
 <script>
-
 // ============================================================
 // PRODUCT DATABASE
 // ============================================================
@@ -420,6 +435,9 @@ let S = {
   lastSaved: null, salesDate: null,
 };
 
+const API_SECRET = '3zzJMvS72_sjN2oYRGeJhA';
+let apiUrl = (localStorage.getItem('bakery_api_url') || '').replace(/\/$/, '');
+let saveTimer = null;
 
 function getInStock(id) { return (S.inventory[id]?.total) || 0; }
 function getSold(id) { return S.sales[id] || 0; }
@@ -427,26 +445,86 @@ function getStockpile(id) { return S.stockpile[id] || 0; }
 function getAdj() { return parseFloat(document.getElementById('adjPct').value) || 1.20; }
 
 // ============================================================
-// PERSISTENCE (local storage + Railway API hook)
+// RAILWAY API SYNC
 // ============================================================
+async function pullFromAPI() {
+  if (!apiUrl) return false;
+  try {
+    const res = await fetch(apiUrl + '/data?secret=' + encodeURIComponent(API_SECRET), { cache: 'no-store' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    // Merge remote data, preserving local keys not present remotely
+    S = Object.assign({}, S, data);
+    setSyncBadge('live', '🟢 Live sync');
+    return true;
+  } catch(e) {
+    setSyncBadge('error', '🔴 Sync error — using local');
+    return false;
+  }
+}
+
+async function pushToAPI() {
+  if (!apiUrl) { persistLocal(); return; }
+  setSyncBadge('saving', '⏳ Saving…');
+  try {
+    const res = await fetch(apiUrl + '/data?secret=' + encodeURIComponent(API_SECRET), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(S)
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    setSyncBadge('live', '🟢 Saved');
+    persistLocal(); // also keep local copy
+  } catch(e) {
+    setSyncBadge('error', '🔴 Save failed — saved locally');
+    persistLocal();
+  }
+}
+
+function persistLocal() {
+  try { localStorage.setItem('bakery_local', JSON.stringify(S)); } catch(e){}
+}
 
 function persist() {
-  // Primary store: local storage
-  try { localStorage.setItem('bakery_local', JSON.stringify(S)); } catch(e){}
-
-  // ----------------------------------------------------------------
-  // RAILWAY BACKEND SYNC — replace the URL below with your Railway
-  // service endpoint (e.g. https://your-app.up.railway.app/api/sync)
-  // to enable cross-device data persistence.
-  //
-  // Example:
-  //   fetch('https://your-app.up.railway.app/api/sync', {
-  //     method: 'POST',
-  //     headers: { 'Content-Type': 'application/json' },
-  //     body: JSON.stringify(S),
-  //   }).catch(() => {}); // fail silently if offline
-  // ----------------------------------------------------------------
+  persistLocal();
+  if (apiUrl) {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(pushToAPI, 600);
+  }
 }
+
+function setSyncBadge(cls, txt) {
+  const el = document.getElementById('syncBadge');
+  el.className = 'sync-badge' + (cls ? ' ' + cls : '');
+  el.textContent = txt;
+}
+
+// ============================================================
+// RAILWAY URL SETTINGS
+// ============================================================
+window.saveRailwayUrl = async function() {
+  const input = document.getElementById('railwayUrlInput');
+  const statusEl = document.getElementById('railwayStatus');
+  let url = input.value.trim().replace(/\/$/, '');
+  if (!url) { statusEl.textContent = '⚠️ Please enter a URL.'; return; }
+  if (!url.startsWith('http')) url = 'https://' + url;
+  statusEl.textContent = '⏳ Testing connection…';
+  try {
+    const res = await fetch(url + '/', { cache: 'no-store' });
+    const json = await res.json();
+    if (!json.status) throw new Error('Unexpected response');
+    localStorage.setItem('bakery_api_url', url);
+    apiUrl = url;
+    statusEl.textContent = '✅ Connected! Syncing now…';
+    setSyncBadge('saving', '⏳ Syncing…');
+    const ok = await pullFromAPI();
+    if (ok) renderInventory();
+    statusEl.textContent = '✅ Connected — data synced across all devices.';
+    showToast('🔗 Railway connected!');
+  } catch(e) {
+    statusEl.textContent = '❌ Could not connect. Check the URL and try again.';
+  }
+};
 
 // ============================================================
 // NAV
@@ -506,25 +584,27 @@ window.updateCol = function(id, col, val) {
   v.total = (v.c1||0)+(v.c2||0)+(v.c3||0)+(v.c4||0);
   const el = document.getElementById('tot_'+id);
   if (el) el.textContent = v.total;
+  persist();
 };
 
-window.saveInventory = function() {
+window.saveInventory = async function() {
   const hasData = Object.values(S.inventory).some(v => v.total > 0);
   if (hasData && S.lastSaved) S.prevInventory = JSON.parse(JSON.stringify(S.inventory));
   S.lastSaved = new Date().toISOString();
+  persistLocal();
   const btn = document.getElementById('saveBtn');
   btn.innerHTML = '<span class="spinner"></span> Saving…';
   btn.disabled = true;
-  persist();
+  await pushToAPI();
   btn.innerHTML = '💾 Save Inventory for This Week';
   btn.disabled = false;
-  showToast('✅ Inventory saved!');
+  showToast(apiUrl ? '✅ Inventory saved & synced!' : '✅ Inventory saved locally!');
 };
 
 window.toggleCard = function(card) { card.classList.toggle('collapsed'); };
 
 // ============================================================
-// CSV UPLOAD
+// CSV UPLOAD  — supports your POS "Sales By Product" format
 // ============================================================
 window.handleCSV = function(input) {
   const file = input.files[0];
@@ -535,65 +615,178 @@ window.handleCSV = function(input) {
   input.value = '';
 };
 
+function splitCSVRow(line, delim) {
+  const result = [];
+  let field = '';
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"') {
+      inQuotes = !inQuotes;
+    } else if (ch === delim && !inQuotes) {
+      result.push(field.trim());
+      field = '';
+    } else {
+      field += ch;
+    }
+  }
+  result.push(field.trim());
+  return result;
+}
+
 function parseCSV(text, fname) {
   const lines = text.split(/\r?\n/).filter(l => l.trim());
   if (lines.length < 2) { showUploadStatus('error', 'File appears empty.'); return; }
 
-  const delimiters = [',','\t',';','|'];
+  // Detect delimiter
+  const firstLine = lines[0];
   let delim = ',';
-  for (const d of delimiters) {
-    if ((lines[0].match(new RegExp('\\' + d.replace('|','\\|'), 'g'))||[]).length > 0) { delim = d; break; }
+  for (const d of [',', '\t', ';', '|']) {
+    const esc = d === '|' ? '\\|' : d;
+    if ((firstLine.match(new RegExp(esc, 'g')) || []).length > 2) { delim = d; break; }
   }
 
-  const headers = lines[0].split(delim).map(h => h.replace(/['"]/g,'').trim().toLowerCase());
-  const nameKW = ['item','name','product','description','menu item','sku','title'];
-  const qtyKW  = ['qty','quantity','sold','units','amount','count','total','sales','net qty','net sales'];
-
-  let nameCol = headers.findIndex(h => nameKW.some(k => h.includes(k)));
-  let qtyCol  = headers.findIndex(h => qtyKW.some(k => h.includes(k)));
-  if (nameCol < 0) nameCol = 0;
-  if (qtyCol  < 0) qtyCol  = 1;
+  // -------------------------------------------------------
+  // Detect POS "Sales By Product" format:
+  // Every row repeats the full report header.
+  // Item name = col 11, qty sold = col 13.
+  // Items appear many times with identical qty — deduplicate.
+  // -------------------------------------------------------
+  const sampleRows = lines.slice(0, Math.min(30, lines.length)).map(l => splitCSVRow(l, delim));
+  const numericAt13 = sampleRows.filter(cols => cols.length >= 14 && !isNaN(parseFloat(cols[13])) && cols[11].length > 1).length;
+  const isPOSFormat = numericAt13 >= Math.min(5, lines.length - 1);
 
   const newSales = {};
   const unmatched = [];
   let matched = 0;
 
-  lines.slice(1).forEach(line => {
-    if (!line.trim()) return;
-    const cols = line.split(delim).map(c => c.replace(/['"]/g,'').trim());
-    const itemName = cols[nameCol];
-    const qty = parseFloat(cols[qtyCol]);
-    if (!itemName || isNaN(qty) || qty < 0) return;
-    const prod = fuzzyMatch(itemName);
-    if (prod) { newSales[prod.id] = (newSales[prod.id]||0) + qty; matched++; }
-    else if (itemName.length > 2) unmatched.push(itemName);
-  });
+  if (isPOSFormat) {
+    // Each unique item name → qty (use first occurrence, all dups are same value)
+    const seenItems = new Map();
+    lines.forEach(line => {
+      const cols = splitCSVRow(line, delim);
+      if (cols.length < 14) return;
+      const rawName = cols[11].trim();
+      const qty = parseFloat(cols[13]);
+      if (!rawName || isNaN(qty) || qty <= 0) return;
+      const key = rawName.toLowerCase();
+      // Skip header-like rows where col 11 is literally a column heading
+      if (key === 'item' || key === 'item name' || key === 'name' || key === 'product') return;
+      if (!seenItems.has(key)) {
+        seenItems.set(key, { name: rawName, qty: qty });
+      }
+    });
+
+    seenItems.forEach(({ name, qty }) => {
+      const prod = fuzzyMatch(name);
+      if (prod) {
+        newSales[prod.id] = (newSales[prod.id] || 0) + qty;
+        matched++;
+      } else if (name.length > 2) {
+        unmatched.push(name);
+      }
+    });
+
+  } else {
+    // Standard CSV — detect header columns
+    const headers = splitCSVRow(lines[0], delim).map(h => h.replace(/['"]/g,'').toLowerCase());
+    const nameKW = ['item','name','product','description','menu','sku','title'];
+    const qtyKW  = ['qty','quantity','sold','units','amount','count','total','sales'];
+    let nameCol = headers.findIndex(h => nameKW.some(k => h.includes(k)));
+    let qtyCol  = headers.findIndex(h => qtyKW.some(k => h.includes(k)));
+    if (nameCol < 0) nameCol = 0;
+    if (qtyCol  < 0) qtyCol  = 1;
+
+    lines.slice(1).forEach(line => {
+      if (!line.trim()) return;
+      const cols = splitCSVRow(line, delim);
+      const itemName = cols[nameCol];
+      const qty = parseFloat(cols[qtyCol]);
+      if (!itemName || isNaN(qty) || qty < 0) return;
+      const prod = fuzzyMatch(itemName);
+      if (prod) { newSales[prod.id] = (newSales[prod.id]||0) + qty; matched++; }
+      else if (itemName.length > 2) unmatched.push(itemName);
+    });
+  }
 
   S.sales = newSales;
   S.salesDate = new Date().toISOString();
   persist();
 
-  const note = unmatched.length
-    ? ` | ${unmatched.length} unmatched: ${unmatched.slice(0,4).join(', ')}${unmatched.length>4?'…':''}`
+  const formatNote = isPOSFormat ? ' (POS format detected)' : '';
+  const unmatchedNote = unmatched.length
+    ? ` — ${unmatched.length} unrecognized: ${unmatched.slice(0,4).join(', ')}${unmatched.length>4?'…':''}`
     : '';
-  showUploadStatus('success', `✅ ${matched} items loaded from "${fname}"${note}`);
-  updateSalesIndicator();
-  showToast(`📊 Sales synced: ${matched} products`);
+  showUploadStatus('success', `✅ ${matched} items loaded from "${fname}"${formatNote}${unmatchedNote}`);
+  showToast(`📊 Sales loaded: ${matched} products`);
 }
 
 function fuzzyMatch(name) {
-  const n = name.toLowerCase().trim();
-  for (const p of PRODUCTS) if (p.name.toLowerCase() === n) return p;
+  const n = name.toLowerCase().trim()
+    .replace(/\(buttertart\)/g, 'butter tart')
+    .replace(/\(bt\)/g, 'butter tart');
+
+  // 1. Exact match (case-insensitive)
+  for (const p of PRODUCTS) {
+    if (p.name.toLowerCase() === n) return p;
+  }
+
+  // 2. One fully contains the other
   for (const p of PRODUCTS) {
     const pn = p.name.toLowerCase();
     if (pn.includes(n) || n.includes(pn)) return p;
   }
+
+  // 3. Significant word overlap (4+ char words)
   for (const p of PRODUCTS) {
-    const pWords = p.name.toLowerCase().split(/\s+/).filter(w => w.length > 3);
-    const nWords = n.split(/\s+/);
-    const hits = pWords.filter(w => nWords.some(nw => nw.includes(w) || w.includes(nw)));
+    const pWords = p.name.toLowerCase().split(/\s+/).filter(w => w.length >= 4);
+    const nWords = n.split(/[\s()+,]+/).filter(w => w.length >= 3);
+    const hits = pWords.filter(pw => nWords.some(nw => nw.includes(pw) || pw.includes(nw)));
     if (hits.length >= 2 || (hits.length === 1 && pWords.length <= 2)) return p;
   }
+
+  // 4. Single keyword match for short product names
+  const keywordMap = [
+    { keys: ['brownie','browny'],      id: 'fudge_brownies'      },
+    { keys: ['butterscotch'],          id: 'butterscotch_brownies'},
+    { keys: ['danish'],                id: 'blueberry_danish'     },
+    { keys: ['scone'],                 id: 'scones'               },
+    { keys: ['cookie','cookies'],      id: 'choc_cookies'         },
+    { keys: ['granola'],               id: 'granola_bar_choc'     },
+    { keys: ['cheesecake','cheese cake','cheese-cake'], id: 'cheesecake' },
+    { keys: ['nanaimo'],               id: 'nanaimo_bars'         },
+    { keys: ['carrot'],                id: 'carrot_cake'          },
+    { keys: ['tiramisu'],              id: 'tiramisu'             },
+    { keys: ['strudel'],               id: 'strudel'              },
+    { keys: ['croissant'],             id: 'croissants'           },
+    { keys: ['cinnamon'],              id: 'cinnamon_buns'        },
+    { keys: ['muffin'],                id: 'muffins_bran'         },
+    { keys: ['scones'],                id: 'scones'               },
+    { keys: ['macaroon'],              id: 'macaroons'            },
+    { keys: ['fritter'],               id: 'fritters'             },
+    { keys: ['pizza pocket'],          id: 'pizza_pocket_deluxe'  },
+    { keys: ['lunch pie'],             id: 'lunch_pie_bbq'        },
+    { keys: ['sausage roll'],          id: 'sausage_roll_maple'   },
+    { keys: ['quiche'],                id: 'quiches'              },
+    { keys: ['lasagna'],               id: 'lg_lasagna'           },
+    { keys: ['shepherd'],              id: 'lg_shepherds_pie'     },
+    { keys: ['tortiere','tourtiere'],  id: 'tortiere'             },
+    { keys: ['canoli','cannoli'],       id: 'canollis'             },
+    { keys: ['cream horn'],            id: 'cream_horns_straw'    },
+    { keys: ['lemon meringue'],        id: 'lemon_meringue'       },
+    { keys: ['banana cream'],          id: 'banana_cream_tart'    },
+    { keys: ['coconut cream'],         id: 'coconut_cream_tart'   },
+    { keys: ['date square'],           id: 'date_squares'         },
+    { keys: ['lava'],                  id: 'lava_cakes'           },
+    { keys: ['pound cake'],            id: 'pound_cake'           },
+    { keys: ['almond joy'],            id: 'almond_joys'          },
+  ];
+  for (const { keys, id } of keywordMap) {
+    if (keys.some(k => n.includes(k))) {
+      return PRODUCTS.find(p => p.id === id) || null;
+    }
+  }
+
   return null;
 }
 
@@ -679,7 +872,7 @@ function renderPriority() {
           <div class="d-lbl">Sold Last Wk</div>
         </div>
         <div class="detail-stat">
-          <div class="d-val${p.needed>0?' red':' green'}">${p.needed>0?p.needed+'pcs':'✓'}</div>
+          <div class="d-val${p.needed>0?' red':' green'}">${p.needed>0?p.needed+' pcs':'✓'}</div>
           <div class="d-lbl">${p.needed>0?'Need to Make':'OK'}</div>
         </div>
       </div>`;
@@ -758,21 +951,28 @@ function renderSettings() {
     html += `</div></div>`;
   });
   document.getElementById('settingsContent').innerHTML = html;
+
+  // Populate Railway URL input if already saved
+  const urlInput = document.getElementById('railwayUrlInput');
+  if (urlInput && apiUrl) {
+    urlInput.value = apiUrl;
+    document.getElementById('railwayStatus').textContent = '✅ Connected';
+  }
 }
 
-window.saveSettings = function() {
+window.saveSettings = async function() {
   PRODUCTS.forEach(p => {
     const el = document.getElementById('sp_'+p.id);
     if (el) S.stockpile[p.id] = parseInt(el.value)||0;
   });
-  persist();
+  await pushToAPI();
   showToast('✅ Stockpile settings saved!');
 };
 
 window.clearAllData = function() {
   if (!confirm('Clear ALL inventory, sales and settings? This cannot be undone.')) return;
   S = { inventory:{}, prevInventory:{}, sales:{}, stockpile:{}, lastSaved:null, salesDate:null };
-  persist();
+  persistLocal();
   renderInventory();
   showToast('🗑 All data cleared.');
 };
@@ -799,22 +999,28 @@ function updateWeekLabel() {
   document.getElementById('weekLabel').textContent = `Week of ${fmt(mon)} – ${fmt(sun)}`;
 }
 
-function updateSalesIndicator() {
-  // handled by sync badge and upload status
-}
-
 // ============================================================
 // INIT
 // ============================================================
 updateWeekLabel();
 
-// Load persisted state from local storage
+// Load local data first (instant)
 try {
   const raw = localStorage.getItem('bakery_local');
   if (raw) S = Object.assign({}, S, JSON.parse(raw));
 } catch(e){}
 
 renderInventory();
+
+// If Railway URL configured, pull latest from server
+if (apiUrl) {
+  setSyncBadge('saving', '⏳ Syncing…');
+  pullFromAPI().then(ok => {
+    if (ok) renderInventory();
+  });
+} else {
+  setSyncBadge('', '📱 Local — add Railway URL in Settings');
+}
 </script>
 </body>
 </html>
