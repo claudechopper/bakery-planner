@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Bakery Schedule Planner</title>
+<style>
+:root {
+  --bg: #f5f0eb; --card: #ffffff; --text: #2c2420; --text-light: #8a7e76;
+  --primary: #7a4f2e; --primary-light: #a06b3e; --accent: #f2e8de;
+  --border: #e8ddd2; --radius: 12px; --shadow: 0 2px 8px rgba(0,0,0,0.06);
+  --success: #27ae60; --warning: #e67e22; --danger: #c0392b;
+  --blue: #1a6fb5; --purple: #7b3fa0;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; background:var(--bg); color:var(--text); min-height:100vh; padding-bottom:80px; }
+
+.app-header { background:linear-gradient(135deg,#5a3318,#7a4f2e); color:white; padding:16px 18px 14px; }
+.app-header h1 { font-size:20px; font-weight:800; }
+.app-header p { font-size:12px; opacity:0.8; margin-top:2px; }
+
+.nav-row { display:flex; gap:8px; padding:10px 14px; background:var(--bg); }
+.nav-btn { flex:1; padding:10px; border:none; border-radius:10px; font-size:12px; font-weight:700;
+  cursor:pointer; color:white; text-align:center; text-decoration:none; display:block; }
+.nav-btn.brown { background:linear-gradient(to bottom,#7a4f2e,#5a3318); }
+.nav-btn.blue { background:linear-gradient(to bottom,#1a6fb5,#134e82); }
+.nav-btn.green { background:linear-gradient(to bottom,#2e8b57,#1d5c38); }
+.nav-btn.purple { background:linear-gradient(to bottom,#7b3fa0,#552a70); }
+
+.section { padding:12px 14px; }
+.section-title { font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-light); margin-bottom:8px; }
+
+/* Upload area */
+.upload-area { background:var(--card); border:2px dashed var(--border); border-radius:var(--radius);
+  padding:20px; text-align:center; cursor:pointer; transition:border-color 0.2s; margin-bottom:12px; }
+.upload-area:hover { border-color:var(--primary-light); }
+.upload-area input { display:none; }
+.upload-label { font-size:14px; font-weight:600; color:var(--primary); }
+
+/* Cards */
+.card { background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow); overflow:hidden; margin-bottom:10px; }
+.card-header { padding:12px 16px; font-weight:700; font-size:15px; display:flex; justify-content:space-between; align-items:center; }
+
+/* Day sections */
+.day-card { margin-bottom:14px; }
+.day-header { background:linear-gradient(135deg,#1a6fb5,#134e82); color:white; padding:12px 16px;
+  border-radius:var(--radius) var(--radius) 0 0; font-weight:800; font-size:16px; }
+.day-body { background:var(--card); border-radius:0 0 var(--radius) var(--radius); box-shadow:var(--shadow); }
+
+/* Worker rows */
+.worker-row { padding:12px 16px; border-bottom:1px solid var(--border); }
+.worker-row:last-child { border-bottom:none; }
+.worker-info { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+.worker-name { font-weight:700; font-size:15px; }
+.worker-hours { font-size:13px; color:var(--blue); font-weight:600; }
+.worker-shift { font-size:11px; color:var(--text-light); }
+
+/* Drop zone */
+.drop-zone { min-height:44px; background:#f9f6f2; border:2px dashed #ddd4c8; border-radius:8px;
+  padding:6px; display:flex; flex-wrap:wrap; gap:6px; transition:all 0.2s; }
+.drop-zone.drag-over { border-color:var(--primary); background:#f2e8de; }
+.drop-zone-hint { font-size:11px; color:#bbb; padding:8px; width:100%; text-align:center; }
+
+/* Priority items (draggable) */
+.priority-chip { display:inline-flex; align-items:center; gap:4px; padding:6px 10px; border-radius:8px;
+  font-size:12px; font-weight:600; cursor:grab; user-select:none; transition:all 0.15s; white-space:nowrap; }
+.priority-chip:active { cursor:grabbing; }
+.priority-chip.cat-pies { background:#fee2e2; color:#991b1b; border:1px solid #fca5a5; }
+.priority-chip.cat-treats { background:#fef3c7; color:#92400e; border:1px solid #fcd34d; }
+.priority-chip.cat-savoury { background:#d1fae5; color:#065f46; border:1px solid #6ee7b7; }
+.priority-chip.cat-bases { background:#e0e7ff; color:#3730a3; border:1px solid #a5b4fc; }
+.priority-chip.cat-default { background:#f3f4f6; color:#374151; border:1px solid #d1d5db; }
+.priority-chip .remove-btn { margin-left:4px; cursor:pointer; opacity:0.5; font-size:14px; line-height:1; }
+.priority-chip .remove-btn:hover { opacity:1; }
+.priority-chip.dragging { opacity:0.4; }
+.priority-chip.warning { outline:2px solid var(--warning); animation:pulse-warn 1s ease-in-out 3; }
+
+@keyframes pulse-warn { 0%,100%{outline-color:var(--warning);} 50%{outline-color:transparent;} }
+
+/* Unassigned pool */
+.pool-area { background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow); padding:14px;
+  margin-bottom:14px; position:sticky; top:0; z-index:50; }
+.pool-title { font-size:14px; font-weight:800; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; }
+.pool-count { font-size:12px; font-weight:600; color:var(--text-light); }
+.pool-items { display:flex; flex-wrap:wrap; gap:6px; min-height:36px; }
+.pool-empty { font-size:13px; color:var(--success); font-weight:600; padding:8px; }
+
+/* Restrictions modal */
+.modal-overlay { display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:200; align-items:center; justify-content:center; }
+.modal-overlay.show { display:flex; }
+.modal-box { background:white; border-radius:16px; padding:20px; width:90%; max-width:500px; max-height:80vh; overflow-y:auto; }
+.modal-title { font-size:18px; font-weight:800; margin-bottom:12px; }
+.modal-close { float:right; background:none; border:none; font-size:22px; cursor:pointer; color:var(--text-light); }
+
+.restrict-employee { margin-bottom:14px; }
+.restrict-employee-name { font-weight:700; font-size:14px; margin-bottom:6px; padding:6px 0; border-bottom:1px solid var(--border); }
+.restrict-grid { display:flex; flex-wrap:wrap; gap:4px; }
+.restrict-item { font-size:11px; padding:4px 8px; border-radius:6px; cursor:pointer; border:1px solid var(--border);
+  background:white; transition:all 0.15s; }
+.restrict-item.restricted { background:#fee2e2; color:#991b1b; border-color:#fca5a5; text-decoration:line-through; }
+
+/* Warning toast */
+.warning-toast { position:fixed; top:20px; left:50%; transform:translateX(-50%); background:#fef3c7;
+  color:#92400e; padding:12px 20px; border-radius:12px; font-size:14px; font-weight:600;
+  box-shadow:0 4px 20px rgba(0,0,0,0.15); z-index:300; display:none; border:2px solid #f59e0b;
+  max-width:90%; text-align:center; }
+.warning-toast.show { display:block; animation:slideDown 0.3s ease; }
+@keyframes slideDown { from{transform:translateX(-50%) translateY(-20px);opacity:0;} to{transform:translateX(-50%) translateY(0);opacity:1;} }
+
+/* Export */
+.export-bar { padding:10px 14px; display:flex; gap:8px; }
+.btn { padding:10px 16px; border:none; border-radius:10px; font-size:13px; font-weight:700; cursor:pointer; }
+.btn-primary { background:var(--primary); color:white; }
+.btn-green { background:#2e8b57; color:white; }
+.btn-purple { background:#7b3fa0; color:white; }
+.btn-outline { background:transparent; border:1.5px solid var(--border); color:var(--text); }
+
+/* No schedule loaded */
+.empty-state { text-align:center; padding:40px 20px; color:var(--text-light); }
+.empty-state svg { width:48px; height:48px; margin-bottom:12px; color:#ccc; }
+
+/* Responsive touch targets */
+@media (max-width:600px) {
+  .priority-chip { padding:8px 12px; font-size:13px; }
+  .worker-row { padding:14px 16px; }
+}
+</style>
+</head>
+<body>
+<div class="app-header">
+  <h1>🗓 Production Schedule</h1>
+  <p>Assign priority items to team members</p>
+</div>
+
+<div class="nav-row">
+  <a href="index.html" class="nav-btn brown">← Bakery Planner</a>
+  <button class="nav-btn purple" onclick="showRestrictions()">⚙ Restrictions</button>
+  <button class="nav-btn green" onclick="exportDoc()">📄 Export</button>
+</div>
+
+<div class="section">
+  <div class="upload-area" onclick="document.getElementById('schedCSV').click()">
+    <input type="file" id="schedCSV" accept=".csv" onchange="handleScheduleCSV(this)">
+    <div class="upload-label">📂 Upload Weekly Schedule CSV</div>
+    <div style="font-size:12px; color:var(--text-light); margin-top:4px;">Tap to select your schedule export file</div>
+  </div>
+</div>
+
+<!-- Unassigned priority items pool -->
+<div class="section" id="poolSection" style="display:none;">
+  <div class="pool-area" id="poolArea">
+    <div class="pool-title">
+      <span>📋 Unassigned Priority Items</span>
+      <span class="pool-count" id="poolCount"></span>
+    </div>
+    <div class="pool-items" id="poolItems"></div>
+  </div>
+</div>
+
+<!-- Schedule content -->
+<div id="scheduleContent"></div>
+
+<!-- Empty state -->
+<div id="emptyState" class="empty-state">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+  <p style="font-size:16px; font-weight:600; margin-bottom:4px;">No schedule loaded</p>
+  <p style="font-size:13px;">Upload a schedule CSV to get started.<br>Priority items will load from the Bakery Planner.</p>
+</div>
+
+<!-- Restrictions modal -->
+<div class="modal-overlay" id="restrictModal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeRestrictions()">&times;</button>
+    <div class="modal-title">⚙ Employee Restrictions</div>
+    <p style="font-size:13px; color:var(--text-light); margin-bottom:14px;">
+      Tap items to mark what each person <strong>can't</strong> make. Red = restricted.
+    </p>
+    <div id="restrictContent"></div>
+    <button class="btn btn-primary" style="width:100%; margin-top:12px;" onclick="closeRestrictions()">Done</button>
+  </div>
+</div>
+
+<!-- Warning toast -->
+<div class="warning-toast" id="warnToast"></div>
+
+<script>
+// ============================================================
+// STATE
+// ============================================================
+let scheduleData = {}; // { '2026-03-23': [{name, timeIn, timeOut, freeHours, freeStart, freeEnd}] }
+let assignments = {};  // { 'Name_Date': ['product_id', ...] }
+let restrictions = {}; // { 'Employee Name': ['product_id', ...] }
+let priorityItems = []; // from bakery planner localStorage
+let allEmployees = [];  // unique names from schedule
+
+const STORAGE_KEY_ASSIGN = 'bakeryScheduleAssignments';
+const STORAGE_KEY_RESTRICT = 'bakeryScheduleRestrictions';
+
+// Load saved state
+try {
+  const savedA = localStorage.getItem(STORAGE_KEY_ASSIGN);
+  if (savedA) assignments = JSON.parse(savedA);
+  const savedR = localStorage.getItem(STORAGE_KEY_RESTRICT);
+  if (savedR) restrictions = JSON.parse(savedR);
+} catch(e) {}
+
+function saveState() {
+  try {
+    localStorage.setItem(STORAGE_KEY_ASSIGN, JSON.stringify(assignments));
+    localStorage.setItem(STORAGE_KEY_RESTRICT, JSON.stringify(restrictions));
+  } catch(e) {}
+}
+
+// ============================================================
+// LOAD PRIORITY ITEMS FROM BAKERY PLANNER
+// ============================================================
+function loadPriorityItems() {
+  try {
+    const raw = localStorage.getItem('bakeryPriorityItems');
+    if (raw) {
+      priorityItems = JSON.parse(raw);
+      return;
+    }
+  } catch(e) {}
+  priorityItems = [];
+}
+
+// ============================================================
+// PARSE SCHEDULE CSV
+// ============================================================
+function handleScheduleCSV(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => parseSchedule(e.target.result);
+  reader.readAsText(file);
+  input.value = '';
+}
+
+function parseTime(str) {
+  // Parse "4:00 pm" → hours as decimal (16.0)
+  const s = str.trim().toLowerCase();
+  const match = s.match(/^(\d{1,2}):(\d{2})\s*(am|pm)$/);
+  if (!match) return null;
+  let h = parseInt(match[1]);
+  const m = parseInt(match[2]);
+  const ampm = match[3];
+  if (ampm === 'pm' && h !== 12) h += 12;
+  if (ampm === 'am' && h === 12) h = 0;
+  return h + m / 60;
+}
+
+function formatHour(h) {
+  const hr = Math.floor(h);
+  const min = Math.round((h - hr) * 60);
+  const ampm = hr >= 12 ? 'PM' : 'AM';
+  const h12 = hr === 0 ? 12 : hr > 12 ? hr - 12 : hr;
+  return min === 0 ? `${h12} ${ampm}` : `${h12}:${String(min).padStart(2,'0')} ${ampm}`;
+}
+
+function parseSchedule(text) {
+  const lines = text.split(/\r?\n/).filter(l => l.trim());
+  if (lines.length < 2) return;
+
+  // Parse CSV with quoted fields
+  function splitRow(line) {
+    const result = []; let field = ''; let inQ = false;
+    for (const ch of line) {
+      if (ch === '"') inQ = !inQ;
+      else if (ch === ',' && !inQ) { result.push(field.trim()); field = ''; }
+      else field += ch;
+    }
+    result.push(field.trim());
+    return result;
+  }
+
+  const headers = splitRow(lines[0]).map(h => h.toLowerCase().replace(/['"]/g,''));
+  const nameCol = headers.findIndex(h => h.includes('employee') && !h.includes('id'));
+  const dateCol = headers.findIndex(h => h.includes('date'));
+  const inCol = headers.findIndex(h => h.includes('time in'));
+  const outCol = headers.findIndex(h => h.includes('time out'));
+
+  if (nameCol < 0 || dateCol < 0 || inCol < 0 || outCol < 0) {
+    alert('Could not find required columns (Employee, Date, Time In, Time Out)');
+    return;
+  }
+
+  scheduleData = {};
+  const empSet = new Set();
+
+  for (let i = 1; i < lines.length; i++) {
+    const cols = splitRow(lines[i]);
+    if (cols.length < Math.max(nameCol, dateCol, inCol, outCol) + 1) continue;
+
+    const name = cols[nameCol].trim();
+    const date = cols[dateCol].trim();
+    const timeInStr = cols[inCol].trim();
+    const timeOutStr = cols[outCol].trim();
+    if (!name || !date || !timeInStr || !timeOutStr) continue;
+
+    const timeIn = parseTime(timeInStr);
+    const timeOut = parseTime(timeOutStr);
+    if (timeIn === null || timeOut === null) continue;
+
+    // Filter: only include if start time is 3:59 PM (15.983...) or earlier
+    if (timeIn > 15 + 59/60) continue;
+
+    // Calculate free hours: overlap with 9 AM - 5 PM window
+    const windowStart = 9;
+    const windowEnd = 17;
+    const overlapStart = Math.max(timeIn, windowStart);
+    const overlapEnd = Math.min(timeOut, windowEnd);
+    const freeHours = Math.max(0, overlapEnd - overlapStart);
+
+    if (freeHours <= 0) continue;
+
+    empSet.add(name);
+    if (!scheduleData[date]) scheduleData[date] = [];
+    scheduleData[date].push({
+      name, timeIn, timeOut, timeInStr, timeOutStr,
+      freeHours: Math.round(freeHours * 100) / 100,
+      freeStart: formatHour(overlapStart),
+      freeEnd: formatHour(overlapEnd)
+    });
+  }
+
+  allEmployees = [...empSet].sort();
+  loadPriorityItems();
+  render();
+}
+
+// ============================================================
+// CATEGORY HELPERS
+// ============================================================
+function getCatClass(cat) {
+  if (!cat) return 'cat-default';
+  const c = cat.toLowerCase();
+  if (c.includes('pie')) return 'cat-pies';
+  if (c.includes('treat')) return 'cat-treats';
+  if (c.includes('savoury')) return 'cat-savoury';
+  if (c.includes('base') || c.includes('prep')) return 'cat-bases';
+  return 'cat-default';
+}
+
+function getDayName(dateStr) {
+  const d = new Date(dateStr + 'T12:00:00');
+  return d.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+}
+
+// ============================================================
+// GET ALL ASSIGNED ITEM IDS (across all workers/days)
+// ============================================================
+function getAllAssigned() {
+  const set = new Set();
+  Object.values(assignments).forEach(arr => arr.forEach(id => set.add(id)));
+  return set;
+}
+
+// ============================================================
+// RENDER
+// ============================================================
+function render() {
+  const dates = Object.keys(scheduleData).sort();
+  if (dates.length === 0) {
+    document.getElementById('emptyState').style.display = '';
+    document.getElementById('poolSection').style.display = 'none';
+    document.getElementById('scheduleContent').innerHTML = '';
+    return;
+  }
+
+  document.getElementById('emptyState').style.display = 'none';
+  document.getElementById('poolSection').style.display = '';
+
+  renderPool();
+  renderSchedule(dates);
+}
+
+function renderPool() {
+  const assigned = getAllAssigned();
+  const unassigned = priorityItems.filter(p => !assigned.has(p.id));
+
+  document.getElementById('poolCount').textContent = unassigned.length > 0
+    ? `${unassigned.length} remaining` : '';
+
+  const container = document.getElementById('poolItems');
+  if (unassigned.length === 0) {
+    container.innerHTML = '<div class="pool-empty">✓ All items assigned!</div>';
+    return;
+  }
+
+  container.innerHTML = unassigned.map(p =>
+    `<div class="priority-chip ${getCatClass(p.cat)}" draggable="true"
+          data-id="${p.id}" ondragstart="onDragStart(event)"
+          ontouchstart="onTouchStart(event)" id="chip_pool_${p.id}">
+      ${p.name} <span style="opacity:0.6;">(${p.needed})</span>
+    </div>`
+  ).join('');
+}
+
+function renderSchedule(dates) {
+  let html = '<div class="section">';
+  dates.forEach(date => {
+    const workers = scheduleData[date];
+    html += `<div class="day-card">
+      <div class="day-header">📅 ${getDayName(date)}</div>
+      <div class="day-body">`;
+    workers.forEach(w => {
+      const key = `${w.name}_${date}`;
+      const workerAssigned = assignments[key] || [];
+      html += `<div class="worker-row">
+        <div class="worker-info">
+          <div>
+            <div class="worker-name">${w.name}</div>
+            <div class="worker-shift">Shift: ${w.timeInStr} — ${w.timeOutStr}</div>
+          </div>
+          <div style="text-align:right;">
+            <div class="worker-hours">${w.freeHours} hrs free</div>
+            <div class="worker-shift">${w.freeStart} — ${w.freeEnd}</div>
+          </div>
+        </div>
+        <div class="drop-zone" data-key="${key}"
+             ondragover="onDragOver(event)" ondragleave="onDragLeave(event)"
+             ondrop="onDrop(event)"
+             ontouchend="onTouchEnd(event)">`;
+
+      if (workerAssigned.length === 0) {
+        html += `<div class="drop-zone-hint">Drag items here to assign</div>`;
+      } else {
+        workerAssigned.forEach(id => {
+          const item = priorityItems.find(p => p.id === id);
+          const name = item ? item.name : id;
+          const cat = item ? item.cat : '';
+          const needed = item ? item.needed : '?';
+          const isRestricted = (restrictions[w.name] || []).includes(id);
+          html += `<div class="priority-chip ${getCatClass(cat)} ${isRestricted?'warning':''}"
+                        data-id="${id}">
+            ${name} (${needed})
+            <span class="remove-btn" onclick="unassign('${key}','${id}')">&times;</span>
+          </div>`;
+        });
+      }
+
+      html += `</div></div>`;
+    });
+    html += `</div></div>`;
+  });
+  html += '</div>';
+  document.getElementById('scheduleContent').innerHTML = html;
+}
+
+// ============================================================
+// DRAG AND DROP (mouse)
+// ============================================================
+let dragId = null;
+
+function onDragStart(e) {
+  dragId = e.target.dataset.id;
+  e.target.classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/plain', dragId);
+}
+
+function onDragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  e.currentTarget.classList.add('drag-over');
+}
+
+function onDragLeave(e) {
+  e.currentTarget.classList.remove('drag-over');
+}
+
+function onDrop(e) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('drag-over');
+  const id = e.dataTransfer.getData('text/plain') || dragId;
+  const key = e.currentTarget.dataset.key;
+  if (!id || !key) return;
+  assignItem(key, id);
+}
+
+// ============================================================
+// TOUCH DRAG (mobile)
+// ============================================================
+let touchDragId = null;
+let touchGhost = null;
+
+function onTouchStart(e) {
+  const chip = e.target.closest('.priority-chip');
+  if (!chip) return;
+  touchDragId = chip.dataset.id;
+  chip.classList.add('dragging');
+
+  // Create ghost element
+  touchGhost = chip.cloneNode(true);
+  touchGhost.style.position = 'fixed';
+  touchGhost.style.pointerEvents = 'none';
+  touchGhost.style.opacity = '0.8';
+  touchGhost.style.zIndex = '999';
+  touchGhost.style.transform = 'scale(1.05)';
+  document.body.appendChild(touchGhost);
+
+  const touch = e.touches[0];
+  touchGhost.style.left = (touch.clientX - 40) + 'px';
+  touchGhost.style.top = (touch.clientY - 20) + 'px';
+
+  document.addEventListener('touchmove', onTouchMove, { passive: false });
+  document.addEventListener('touchend', onTouchDrop, { once: true });
+}
+
+function onTouchMove(e) {
+  e.preventDefault();
+  if (!touchGhost) return;
+  const touch = e.touches[0];
+  touchGhost.style.left = (touch.clientX - 40) + 'px';
+  touchGhost.style.top = (touch.clientY - 20) + 'px';
+
+  // Highlight drop zone under finger
+  document.querySelectorAll('.drop-zone').forEach(dz => dz.classList.remove('drag-over'));
+  const el = document.elementFromPoint(touch.clientX, touch.clientY);
+  const dz = el?.closest('.drop-zone');
+  if (dz) dz.classList.add('drag-over');
+}
+
+function onTouchDrop(e) {
+  document.removeEventListener('touchmove', onTouchMove);
+  if (touchGhost) { touchGhost.remove(); touchGhost = null; }
+  document.querySelectorAll('.drop-zone').forEach(dz => dz.classList.remove('drag-over'));
+  document.querySelectorAll('.priority-chip.dragging').forEach(c => c.classList.remove('dragging'));
+
+  if (!touchDragId) return;
+  const touch = e.changedTouches[0];
+  const el = document.elementFromPoint(touch.clientX, touch.clientY);
+  const dz = el?.closest('.drop-zone');
+  if (dz) {
+    assignItem(dz.dataset.key, touchDragId);
+  }
+  touchDragId = null;
+}
+
+// ============================================================
+// ASSIGNMENT LOGIC
+// ============================================================
+function assignItem(key, id) {
+  // Check restrictions
+  const workerName = key.split('_').slice(0, -1).join('_');
+  // Key format: "Name_YYYY-MM-DD" — name might contain underscores so split from right
+  const lastUnderscore = key.lastIndexOf('_');
+  const empName = key.substring(0, lastUnderscore);
+
+  const empRestrictions = restrictions[empName] || [];
+  if (empRestrictions.includes(id)) {
+    const item = priorityItems.find(p => p.id === id);
+    showWarning(`⚠️ ${empName} can't make ${item ? item.name : id}!`);
+    return; // Block the assignment
+  }
+
+  // Remove from any previous assignment
+  Object.keys(assignments).forEach(k => {
+    assignments[k] = assignments[k].filter(x => x !== id);
+    if (assignments[k].length === 0) delete assignments[k];
+  });
+
+  // Add to new assignment
+  if (!assignments[key]) assignments[key] = [];
+  if (!assignments[key].includes(id)) assignments[key].push(id);
+
+  saveState();
+  render();
+}
+
+function unassign(key, id) {
+  if (!assignments[key]) return;
+  assignments[key] = assignments[key].filter(x => x !== id);
+  if (assignments[key].length === 0) delete assignments[key];
+  saveState();
+  render();
+}
+
+// ============================================================
+// WARNING TOAST
+// ============================================================
+function showWarning(msg) {
+  const toast = document.getElementById('warnToast');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 3000);
+}
+
+// ============================================================
+// RESTRICTIONS MODAL
+// ============================================================
+function showRestrictions() {
+  loadPriorityItems(); // refresh
+  const allProducts = priorityItems.length > 0 ? priorityItems : [];
+
+  // Get employee names from schedule or from saved restrictions
+  let empNames = [...allEmployees];
+  Object.keys(restrictions).forEach(name => {
+    if (!empNames.includes(name)) empNames.push(name);
+  });
+  empNames.sort();
+
+  if (empNames.length === 0) {
+    alert('Upload a schedule first to see employees.');
+    return;
+  }
+
+  // Also include all products from the bakery planner state
+  let allProds = [...allProducts];
+  // If no priority items loaded, try to get from full product list
+  if (allProds.length === 0) {
+    try {
+      const raw = localStorage.getItem('bakeryPlannerState');
+      if (raw) {
+        // Can't access PRODUCTS array from other page, but we'll show what we have
+      }
+    } catch(e) {}
+  }
+
+  // Get ALL product names from bakery planner state for restrictions
+  let prodList = [];
+  try {
+    const allRaw = localStorage.getItem('bakeryPriorityItems');
+    if (allRaw) prodList = JSON.parse(allRaw);
+  } catch(e) {}
+  // Fallback: use priority items
+  if (prodList.length === 0) prodList = allProducts;
+
+  let html = '';
+  empNames.forEach(name => {
+    const empR = restrictions[name] || [];
+    html += `<div class="restrict-employee">
+      <div class="restrict-employee-name">${name}</div>
+      <div class="restrict-grid">`;
+    prodList.forEach(p => {
+      const isR = empR.includes(p.id);
+      html += `<div class="restrict-item ${isR?'restricted':''}"
+                    onclick="toggleRestriction('${name}','${p.id}',this)">${p.name}</div>`;
+    });
+    html += `</div></div>`;
+  });
+
+  document.getElementById('restrictContent').innerHTML = html;
+  document.getElementById('restrictModal').classList.add('show');
+}
+
+function closeRestrictions() {
+  document.getElementById('restrictModal').classList.remove('show');
+  render(); // re-render to show any warning chips
+}
+
+window.toggleRestriction = function(empName, prodId, el) {
+  if (!restrictions[empName]) restrictions[empName] = [];
+  const idx = restrictions[empName].indexOf(prodId);
+  if (idx >= 0) {
+    restrictions[empName].splice(idx, 1);
+    el.classList.remove('restricted');
+  } else {
+    restrictions[empName].push(prodId);
+    el.classList.add('restricted');
+  }
+  saveState();
+};
+
+// ============================================================
+// EXPORT TO DOC
+// ============================================================
+function exportDoc() {
+  const dates = Object.keys(scheduleData).sort();
+  if (dates.length === 0) { alert('No schedule loaded.'); return; }
+
+  let html = `<html xmlns:o="urn:schemas-microsoft-com:office:office"
+    xmlns:w="urn:schemas-microsoft-com:office:word"
+    xmlns="http://www.w3.org/TR/REC-html40">
+    <head><meta charset="utf-8">
+    <style>
+      body { font-family: Calibri, Arial, sans-serif; font-size: 12pt; }
+      h1 { font-size: 18pt; color: #5a3318; border-bottom: 2px solid #7a4f2e; padding-bottom: 4pt; }
+      h2 { font-size: 14pt; color: #1a6fb5; margin-top: 16pt; }
+      .worker { margin-bottom: 10pt; }
+      .worker-name { font-weight: bold; font-size: 12pt; }
+      .worker-detail { font-size: 10pt; color: #666; }
+      table { border-collapse: collapse; width: 100%; margin-top: 4pt; margin-bottom: 8pt; }
+      td, th { border: 1px solid #ccc; padding: 4pt 8pt; font-size: 11pt; }
+      th { background: #f2e8de; font-weight: bold; text-align: left; }
+      .restricted { color: #c0392b; font-style: italic; }
+    </style></head><body>`;
+
+  html += `<h1>Production Schedule — Week Assignments</h1>`;
+  html += `<p style="font-size:10pt;color:#888;">Exported ${new Date().toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' })}</p>`;
+
+  dates.forEach(date => {
+    html += `<h2>${getDayName(date)}</h2>`;
+    const workers = scheduleData[date];
+    workers.forEach(w => {
+      const key = `${w.name}_${date}`;
+      const items = assignments[key] || [];
+      html += `<div class="worker">
+        <div class="worker-name">${w.name}</div>
+        <div class="worker-detail">Shift: ${w.timeInStr} — ${w.timeOutStr} | Free: ${w.freeHours} hrs (${w.freeStart} — ${w.freeEnd})</div>`;
+
+      if (items.length > 0) {
+        html += `<table><tr><th>Assigned Item</th><th>Qty Needed</th><th>Category</th></tr>`;
+        items.forEach(id => {
+          const p = priorityItems.find(x => x.id === id);
+          const name = p ? p.name : id;
+          const needed = p ? p.needed : '?';
+          const cat = p ? p.cat : '';
+          const isR = (restrictions[w.name] || []).includes(id);
+          html += `<tr${isR?' class="restricted"':''}>
+            <td>${name}${isR ? ' ⚠️' : ''}</td><td>${needed} pcs</td><td>${cat}</td></tr>`;
+        });
+        html += `</table>`;
+      } else {
+        html += `<p style="font-size:10pt;color:#aaa;margin-top:2pt;">No items assigned</p>`;
+      }
+      html += `</div>`;
+    });
+  });
+
+  // Summary of unassigned
+  const assigned = getAllAssigned();
+  const unassigned = priorityItems.filter(p => !assigned.has(p.id));
+  if (unassigned.length > 0) {
+    html += `<h2 style="color:#c0392b;">Unassigned Items (${unassigned.length})</h2><ul>`;
+    unassigned.forEach(p => html += `<li>${p.name} — ${p.needed} pcs (${p.cat})</li>`);
+    html += `</ul>`;
+  }
+
+  html += `</body></html>`;
+
+  const blob = new Blob([html], { type: 'application/msword' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `production-schedule-${Object.keys(scheduleData).sort()[0]}.doc`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ============================================================
+// INIT
+// ============================================================
+loadPriorityItems();
+</script>
+</body>
+</html>
