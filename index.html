@@ -18,7 +18,6 @@ body {
   background: var(--bg); color: var(--text); font-size: 16px;
   line-height: 1.5; min-height: 100vh; padding-bottom: 76px;
 }
-
 /* HEADER */
 .app-header {
   background: var(--primary); color: white; padding: 14px 18px 10px;
@@ -46,14 +45,74 @@ body {
   flex: 1; padding: 10px 4px 8px; border: none; background: none;
   color: var(--text-light); font-size: 10px; font-weight: 600;
   cursor: pointer; display: flex; flex-direction: column;
-  align-items: center; gap: 3px; min-height: 54px; transition: color 0.15s;
+  align-items: center; gap: 3px; min-height: 54px; transition: all 0.15s;
 }
 .tab-btn.active { color: var(--primary); }
 .tab-btn svg { width: 22px; height: 22px; }
+/* Inventory button always stands out */
+#nav-inventory {
+  background: linear-gradient(to bottom, #c49070, #8a5832);
+  color: white; border-right: 2px solid var(--primary);
+  border-radius: 0 0 0 0;
+}
+#nav-inventory.active { background: linear-gradient(to bottom, #8a5832, #5a3018); }
+#nav-inventory svg { color: white; }
 
 /* CONTENT */
-.tab-content { display: none; padding: 14px 14px 0; }
+.tab-content { display: none; padding: 0; }
 .tab-content.active { display: block; }
+
+/* WEEK TABS */
+.week-tabs-row {
+  display: flex; gap: 6px; overflow-x: auto; padding: 10px 14px 6px;
+  scrollbar-width: none; background: var(--bg);
+}
+.week-tabs-row::-webkit-scrollbar { display: none; }
+.week-tab {
+  flex-shrink: 0; padding: 6px 14px; border-radius: 18px;
+  font-size: 12px; font-weight: 600; cursor: pointer;
+  border: 1.5px solid var(--border); background: var(--card);
+  color: var(--text-light); transition: all 0.15s; white-space: nowrap;
+}
+.week-tab.active { background: var(--primary); color: white; border-color: var(--primary); }
+.tab-inner-pad { padding: 10px 14px 0; }
+
+/* SEARCH */
+.search-bar {
+  position: relative; padding: 8px 14px 6px; background: var(--bg);
+}
+.search-input {
+  width: 100%; padding: 10px 14px 10px 38px; border: 1.5px solid var(--border);
+  border-radius: 10px; font-size: 15px; background: var(--card);
+  color: var(--text); -webkit-appearance: none;
+}
+.search-input:focus { outline: none; border-color: var(--primary-light); }
+.search-icon {
+  position: absolute; left: 26px; top: 50%; transform: translateY(-50%);
+  color: var(--text-light); width: 18px; height: 18px; pointer-events: none;
+}
+
+/* UPLOAD AREA — dark, employee doesn't touch this */
+.upload-area {
+  background: #3a3a3a; margin: 0; padding: 14px 16px 16px;
+  border-bottom: 3px solid #222;
+}
+.upload-area h3 { color: #e8e8e8; font-size: 14px; margin-bottom: 4px; }
+.upload-area p { font-size: 12px; color: #999; margin-bottom: 10px; line-height: 1.4; }
+.upload-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 9px 16px; border: 1.5px solid #666; border-radius: 8px;
+  background: #555; color: #e8e8e8; font-size: 13px; font-weight: 600;
+  cursor: pointer; -webkit-appearance: none;
+}
+.upload-btn:active { opacity: 0.7; }
+
+/* STATUS BANNER */
+#uploadStatus { padding: 0 14px; }
+.status-banner { padding: 11px 14px; border-radius: 10px; margin: 8px 0 2px; font-size: 13px; font-weight: 600; }
+.status-banner.success { background: #e6f4ec; color: var(--success); border: 1px solid #b0d8c0; }
+.status-banner.error { background: #fbeaea; color: var(--danger); border: 1px solid #e8b0b0; }
+.status-banner.warning { background: #fef5e6; color: var(--warning); border: 1px solid #e8d0a0; }
 
 /* CARDS */
 .card {
@@ -74,21 +133,19 @@ body {
 /* INVENTORY ROWS */
 .product-row { border-bottom: 1px solid var(--border); padding: 10px 14px; }
 .product-row:last-child { border-bottom: none; }
-.product-name {
-  font-size: 15px; font-weight: 600; color: var(--text);
-  margin-bottom: 7px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
-}
-.two-day-badge {
-  font-size: 10px; background: var(--warning); color: white;
-  padding: 2px 6px; border-radius: 8px; font-weight: 700; flex-shrink: 0;
-}
+.product-row.hidden { display: none; }
+.product-name { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 7px; }
 .stock-row { display: grid; grid-template-columns: repeat(4, 1fr) 48px; gap: 5px; align-items: center; }
 .stock-input {
   width: 100%; padding: 10px 4px; text-align: center;
   border: 1.5px solid var(--border); border-radius: 8px;
   font-size: 17px; font-weight: 600; color: var(--text);
-  background: var(--bg); -webkit-appearance: none;
+  -webkit-appearance: none;
 }
+.stock-input.ci-1 { background: #fefcfa; }
+.stock-input.ci-2 { background: #f5ede0; }
+.stock-input.ci-3 { background: #e9dcc8; }
+.stock-input.ci-4 { background: #ddd0b5; }
 .stock-input:focus { outline: none; border-color: var(--primary); background: white; }
 .stock-total { font-size: 20px; font-weight: 800; color: var(--primary); text-align: center; }
 
@@ -103,30 +160,12 @@ body {
 .btn-primary { background: var(--primary); color: white; width: 100%; justify-content: center; }
 .btn-secondary { background: var(--accent); color: var(--primary); width: 100%; justify-content: center; }
 .btn-success { background: var(--success); color: white; width: 100%; justify-content: center; }
+.btn-outline { background: transparent; color: var(--primary); border: 1.5px solid var(--primary); width: 100%; justify-content: center; }
 .btn-sm { padding: 9px 16px; font-size: 14px; }
 .save-bar {
-  position: sticky; bottom: 62px;
-  padding: 8px 0 4px;
-  background: linear-gradient(transparent, var(--bg) 40%);
-  z-index: 50;
+  position: sticky; bottom: 62px; padding: 8px 14px 4px;
+  background: linear-gradient(transparent, var(--bg) 40%); z-index: 50;
 }
-
-/* UPLOAD */
-.upload-box {
-  background: var(--card); border-radius: var(--radius);
-  box-shadow: var(--shadow); padding: 20px 16px; margin-bottom: 10px;
-}
-.upload-box h3 { font-size: 16px; color: var(--primary); margin-bottom: 6px; }
-.upload-box p { font-size: 13px; color: var(--text-light); margin-bottom: 14px; line-height: 1.5; }
-.csv-hint {
-  background: var(--bg); border-radius: 8px; padding: 10px 12px;
-  font-family: monospace; font-size: 12px; color: var(--text-light);
-  margin-top: 12px; border: 1px solid var(--border);
-}
-.status-banner { padding: 11px 14px; border-radius: 10px; margin-bottom: 10px; font-size: 14px; font-weight: 600; }
-.status-banner.success { background: #e6f4ec; color: var(--success); border: 1px solid #b0d8c0; }
-.status-banner.error { background: #fbeaea; color: var(--danger); border: 1px solid #e8b0b0; }
-.status-banner.warning { background: #fef5e6; color: var(--warning); border: 1px solid #e8d0a0; }
 
 /* PRIORITY */
 .priority-controls {
@@ -146,12 +185,20 @@ body {
   color: var(--text-light); cursor: pointer; white-space: nowrap;
 }
 .toggle-btn.on { background: var(--primary); color: white; border-color: var(--primary); }
-
 .priority-item {
   background: var(--card); border-radius: var(--radius);
   box-shadow: var(--shadow); margin-bottom: 9px; overflow: hidden;
+  cursor: pointer; transition: all 0.2s;
 }
+.priority-item.hidden { display: none; }
 .priority-item.top { border: 2px solid var(--gold); box-shadow: 0 4px 20px rgba(200,160,48,0.2); }
+.priority-item.done {
+  opacity: 0.4; filter: blur(0.5px);
+  background: #e4e4e4; border: 1px solid #ccc !important;
+  box-shadow: none !important;
+}
+.priority-item.done .priority-name { text-decoration: line-through; text-decoration-color: #888; }
+.priority-item.done .rank-bubble { background: #aaa; color: white; }
 .priority-main { padding: 13px 14px; display: flex; align-items: center; gap: 12px; }
 .rank-bubble {
   min-width: 42px; height: 42px; border-radius: 50%;
@@ -163,7 +210,7 @@ body {
 .priority-info { flex: 1; min-width: 0; }
 .priority-name { font-size: 16px; font-weight: 700; color: var(--text); }
 .priority-sub { font-size: 13px; margin-top: 1px; }
-.priority-sub.urgent { color: var(--danger); font-weight: 600; }
+.priority-sub.urgent { font-weight: 600; }
 .priority-sub.good { color: var(--success); font-weight: 600; }
 .priority-sub.idle { color: var(--text-light); }
 .score-box { text-align: right; flex-shrink: 0; }
@@ -182,11 +229,11 @@ body {
 /* PRODUCTION TABLE */
 .prod-cat-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text-light); padding: 10px 4px 5px; }
 .prod-table-wrap { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); overflow-x: auto; margin-bottom: 12px; }
-table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 480px; }
-thead th { background: var(--accent); color: var(--primary); padding: 9px 8px; text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.3px; font-weight: 700; white-space: nowrap; }
-tbody td { padding: 9px 8px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 680px; }
+thead th { padding: 9px 8px; text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.3px; font-weight: 700; white-space: nowrap; }
+tbody td { padding: 8px 8px; border-bottom: 1px solid #eee; vertical-align: middle; }
 tbody tr:last-child td { border-bottom: none; }
-tbody tr:nth-child(even) td { background: #faf8f5; }
+tbody tr.hidden { display: none; }
 .td-name { font-weight: 600; }
 .td-needed { color: var(--danger); font-weight: 700; }
 .td-ok { color: var(--success); font-weight: 700; }
@@ -194,19 +241,30 @@ tbody tr:nth-child(even) td { background: #faf8f5; }
 .td-disc-neg { color: var(--success); font-weight: 700; }
 .td-disc-zero { color: var(--text-light); }
 .two-day-flag { font-size: 11px; color: var(--warning); font-weight: 700; }
+/* Production column shades */
+.col-stock { background: #fefcfa; }
+.col-sold  { background: #f3ede5; }
+.col-waste { background: #fef6e4; }
+.col-need  { background: #fbeaea; }
+.col-batch { background: #f0ebe2; }
+.col-made  { background: #e6f4ec; }
+.col-time  { background: #f5f0ea; }
+.col-disc  { background: #f5f5f5; }
+.mini-input {
+  width: 60px; padding: 5px 4px; text-align: center;
+  border: 1.5px solid var(--border); border-radius: 6px;
+  font-size: 14px; font-weight: 600; color: var(--text);
+  background: rgba(255,255,255,0.7); -webkit-appearance: none;
+}
+.mini-input:focus { outline: none; border-color: var(--primary); }
 
 /* SETTINGS */
 .settings-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border-bottom: 1px solid var(--border); gap: 10px; }
 .settings-row:last-child { border-bottom: none; }
+.settings-row.hidden { display: none; }
 .settings-name { flex: 1; font-size: 14px; font-weight: 500; }
 .settings-input { width: 72px; padding: 7px; text-align: center; border: 1.5px solid var(--border); border-radius: 8px; font-size: 15px; font-weight: 600; background: var(--bg); }
-
-/* Railway URL Input */
-.url-input {
-  width: 100%; border: 1.5px solid var(--border); border-radius: 8px;
-  padding: 10px; font-size: 14px; background: var(--bg);
-  margin-bottom: 10px; color: var(--text);
-}
+.url-input { width: 100%; border: 1.5px solid var(--border); border-radius: 8px; padding: 10px; font-size: 14px; background: var(--bg); margin-bottom: 10px; color: var(--text); }
 .url-input:focus { outline: none; border-color: var(--primary); }
 
 /* MISC */
@@ -218,12 +276,53 @@ tbody tr:nth-child(even) td { background: #faf8f5; }
 }
 .no-data { text-align: center; padding: 40px 20px; color: var(--text-light); font-size: 15px; }
 input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; }
-.section-info { font-size: 13px; color: var(--text-light); margin-bottom: 10px; line-height: 1.5; }
+.section-info { font-size: 13px; color: var(--text-light); padding: 10px 14px 6px; line-height: 1.5; }
 .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.4); border-top-color: white; border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle; margin-right: 4px; }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* SAVE MODAL */
+.modal-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.5); z-index: 2000;
+  align-items: center; justify-content: center;
+}
+.modal-overlay.show { display: flex; }
+.modal-box {
+  background: white; border-radius: 18px; padding: 32px 24px;
+  max-width: 300px; width: 90%; text-align: center;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.25); animation: popIn 0.2s ease-out;
+}
+@keyframes popIn { from { transform: scale(0.85); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.modal-icon { font-size: 52px; margin-bottom: 10px; }
+.modal-title { font-size: 22px; font-weight: 800; color: var(--success); margin-bottom: 8px; }
+.modal-body { font-size: 15px; color: var(--success); line-height: 1.6; margin-bottom: 22px; }
+.modal-btn { background: var(--success); color: white; border: none; border-radius: 10px; padding: 13px 0; width: 100%; font-size: 17px; font-weight: 700; cursor: pointer; }
+
+/* PRINT STYLES */
+@media print {
+  body { padding-bottom: 0; background: white; }
+  .tab-nav, .app-header, .save-bar, .week-tabs-row, .search-bar,
+  .priority-controls, .upload-area, #uploadStatus, .section-info,
+  .tab-content:not(.active) { display: none !important; }
+  .tab-content.active { display: block !important; padding: 0; }
+  .prod-table-wrap { overflow: visible; box-shadow: none; border: 1px solid #ccc; }
+  table { min-width: 0 !important; font-size: 11px; }
+  .mini-input { border: 1px solid #ccc; }
+  #exportBtn { display: none !important; }
+}
 </style>
 </head>
 <body>
+
+<!-- SAVE MODAL -->
+<div class="modal-overlay" id="saveModal">
+  <div class="modal-box">
+    <div class="modal-icon">✅</div>
+    <div class="modal-title">Saved!</div>
+    <div class="modal-body" id="saveModalTime"></div>
+    <button class="modal-btn" onclick="document.getElementById('saveModal').classList.remove('show')">OK</button>
+  </div>
+</div>
 
 <!-- HEADER -->
 <div class="app-header">
@@ -238,17 +337,24 @@ input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer
 
 <!-- TAB: INVENTORY -->
 <div id="tab-inventory" class="tab-content active">
-  <div class="upload-box">
-    <h3>📊 Upload Weekly Sales (CSV)</h3>
-    <p>Export from your POS and upload. The app auto-matches items and syncs to all devices.</p>
+  <!-- Dark upload area — owner/manager area only -->
+  <div class="upload-area">
+    <h3>📊 Weekly Sales Upload (Owner)</h3>
+    <p>Export CSV from POS and upload once per week. Employee does not need to use this.</p>
     <input type="file" id="csvFile" accept=".csv,.txt" style="display:none" onchange="handleCSV(this)">
-    <button class="btn btn-secondary btn-sm" onclick="document.getElementById('csvFile').click()">📁 Choose Sales CSV</button>
-    <div class="csv-hint">
-      Supports your POS "Sales By Product" CSV export format automatically.
-    </div>
+    <button class="upload-btn" onclick="document.getElementById('csvFile').click()">📁 Choose Sales CSV</button>
+    <div id="uploadStatus"></div>
   </div>
-  <div id="uploadStatus"></div>
-  <div id="inventoryList"></div>
+  <!-- Week selector -->
+  <div class="week-tabs-row" id="invWeekTabs"></div>
+  <!-- Search -->
+  <div class="search-bar">
+    <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+    </svg>
+    <input type="text" class="search-input" placeholder="Search items…" oninput="searchInventory(this.value)" id="invSearch">
+  </div>
+  <div style="padding: 0 14px;" id="inventoryList"></div>
   <div class="save-bar">
     <button class="btn btn-primary" onclick="saveInventory()" id="saveBtn">💾 Save Inventory for This Week</button>
   </div>
@@ -256,8 +362,8 @@ input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer
 
 <!-- TAB: PRIORITY -->
 <div id="tab-priority" class="tab-content">
-  <div class="priority-controls">
-    <div class="ctrl-label">Sales Adjustment</div>
+  <div class="priority-controls" style="margin:10px 14px 0;">
+    <div class="ctrl-label">Sales Adjustment — tap any item to mark it done</div>
     <div class="ctrl-row">
       <select class="pct-select" id="adjPct" onchange="renderPriority()">
         <option value="1.10">+10% above last week</option>
@@ -269,39 +375,58 @@ input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer
       <button class="toggle-btn" id="detailToggle" onclick="toggleDetails()">Details</button>
     </div>
   </div>
-  <div id="priorityList"></div>
+  <div class="search-bar">
+    <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+    </svg>
+    <input type="text" class="search-input" placeholder="Search items…" oninput="searchPriority(this.value)">
+  </div>
+  <div style="padding:0 14px;" id="priorityList"></div>
 </div>
 
 <!-- TAB: PRODUCTION -->
 <div id="tab-production" class="tab-content">
-  <p class="section-info">Pieces and batches needed this week, based on last week's sales + adjustment, minus current stock and stockpile targets.</p>
-  <div id="productionContent"></div>
+  <p class="section-info">Enter what was <strong>Made</strong> and any <strong>Waste/Giveaway</strong>. Waste counts as sold when calculating needs.</p>
+  <div class="week-tabs-row" id="prodWeekTabs"></div>
+  <div style="padding:6px 14px 0; display:flex; gap:8px; align-items:center;">
+    <div class="search-bar" style="flex:1; padding:4px 0;">
+      <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input type="text" class="search-input" placeholder="Search items…" oninput="searchProduction(this.value)">
+    </div>
+    <button id="exportBtn" class="btn btn-outline btn-sm" style="width:auto;white-space:nowrap;" onclick="window.print()">🖨 Export / Print</button>
+  </div>
+  <div style="padding:0 14px;" id="productionContent"></div>
 </div>
 
 <!-- TAB: SETTINGS -->
 <div id="tab-settings" class="tab-content">
-  <p class="section-info">Set the minimum "always in stock" target per item. This is added on top of weekly production when calculating how much to make.</p>
-  <div id="settingsContent"></div>
-  <div style="padding: 8px 0 16px;">
+  <p class="section-info">Set the minimum "always in stock" target per item.</p>
+  <div class="search-bar">
+    <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+    </svg>
+    <input type="text" class="search-input" placeholder="Search items…" oninput="searchSettings(this.value)">
+  </div>
+  <div style="padding:0 14px;" id="settingsContent"></div>
+  <div style="padding: 8px 14px 16px;">
     <button class="btn btn-success" onclick="saveSettings()">💾 Save Stockpile Settings</button>
   </div>
-  <div class="card" style="margin-bottom:10px;">
-    <div class="card-header" onclick="toggleCard(this.parentElement)">
-      <span>🔗 Railway Sync Settings</span>
-      <svg class="collapse-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
-    </div>
-    <div class="card-body" style="padding:14px;">
-      <p style="font-size:13px;color:var(--text-light);margin-bottom:12px;">
-        Enter your Railway app URL to sync data between your iPad, iPhone, and Mac. Found in your Railway project dashboard under "Settings → Domains".
-      </p>
-      <label style="font-size:13px;font-weight:700;display:block;margin-bottom:5px;">Railway URL</label>
-      <input type="url" id="railwayUrlInput" class="url-input"
-        placeholder="https://your-app.up.railway.app">
-      <div id="railwayStatus" style="font-size:13px;color:var(--text-light);margin-bottom:10px;"></div>
-      <button class="btn btn-primary btn-sm" style="margin-bottom:8px;" onclick="saveRailwayUrl()">
-        Connect &amp; Sync
-      </button>
-      <button class="btn btn-secondary btn-sm" style="color:var(--danger);" onclick="clearAllData()">🗑 Clear All Data</button>
+  <div style="padding:0 14px 14px;">
+    <div class="card">
+      <div class="card-header" onclick="toggleCard(this.parentElement)">
+        <span>🔗 Railway Sync Settings</span>
+        <svg class="collapse-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="card-body" style="padding:14px;">
+        <p style="font-size:13px;color:var(--text-light);margin-bottom:12px;">Enter your Railway app URL to sync data across all devices.</p>
+        <label style="font-size:13px;font-weight:700;display:block;margin-bottom:5px;">Railway URL</label>
+        <input type="url" id="railwayUrlInput" class="url-input" placeholder="https://your-app.up.railway.app">
+        <div id="railwayStatus" style="font-size:13px;color:var(--text-light);margin-bottom:10px;"></div>
+        <button class="btn btn-primary btn-sm" style="margin-bottom:8px;" onclick="saveRailwayUrl()">Connect &amp; Sync</button>
+        <button class="btn btn-secondary btn-sm" style="color:var(--danger);" onclick="clearAllData()">🗑 Clear All Data</button>
+      </div>
     </div>
   </div>
 </div>
@@ -337,112 +462,147 @@ input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer
 
 <script>
 // ============================================================
-// PRODUCT DATABASE
+// PRODUCT DATABASE — sorted alphabetically within each category
+// posAlias: exact POS names that map to this product
+// nameStyle: inline CSS for special text color
 // ============================================================
 const PRODUCTS = [
   // TREATS
-  {id:'butterscotch_brownies', name:'Butterscotch Brownies',       cat:'TREATS',         ppb:24, days:1},
-  {id:'fudge_brownies',        name:'Fudge Brownies',              cat:'TREATS',         ppb:24, days:1},
-  {id:'german_brownies',       name:'German Brownies',             cat:'TREATS',         ppb:24, days:1},
-  {id:'cookie_dough_brownies', name:'Cookie Dough Brownies',       cat:'TREATS',         ppb:24, days:1},
-  {id:'almond_joys',           name:'Almond Joys',                 cat:'TREATS',         ppb:24, days:1},
-  {id:'pb_marshmallow',        name:'PB Marshmallow Square',       cat:'TREATS',         ppb:24, days:1},
-  {id:'macaroons',             name:'Macaroons (Reg)',             cat:'TREATS',         ppb:48, days:1},
-  {id:'choc_cookies',          name:'Choc Cookies',                cat:'TREATS',         ppb:28, days:1},
-  {id:'pb_cookies',            name:'PB Cookies',                  cat:'TREATS',         ppb:14, days:1},
-  {id:'cowgirl_cookies',       name:'Cowgirl Cookies',             cat:'TREATS',         ppb:14, days:1},
-  {id:'oatmeal_cookies',       name:'Oatmeal Cookies',             cat:'TREATS',         ppb:14, days:1},
-  {id:'granola_bar_choc',      name:'Granola Bar (Choc)',          cat:'TREATS',         ppb:32, days:1},
-  {id:'blueberry_danish',      name:'Blueberry Danish',            cat:'TREATS',         ppb:4,  days:2},
-  {id:'cherry_danish',         name:'Cherry Danish',               cat:'TREATS',         ppb:4,  days:2},
-  {id:'butter_tart_pecan',     name:'Butter Tart (Pecan)',         cat:'TREATS',         ppb:12, days:1},
-  {id:'butter_tart_raisin',    name:'Butter Tart (Raisin)',        cat:'TREATS',         ppb:12, days:1},
-  {id:'butter_tart_plain',     name:'Butter Tart (Plain)',         cat:'TREATS',         ppb:12, days:1},
-  {id:'date_squares',          name:'Date Squares',                cat:'TREATS',         ppb:24, days:1},
-  {id:'strudel',               name:'Strudel',                     cat:'TREATS',         ppb:5,  days:2},
-  {id:'super_mini_pie',        name:'Super Mini Pie (LB)',         cat:'TREATS',         ppb:24, days:1},
-  {id:'cheesecake',            name:'Cheesecake (Assorted)',       cat:'TREATS',         ppb:12, days:2},
-  {id:'tiramisu',              name:'Tiramisu',                    cat:'TREATS',         ppb:1,  days:2},
-  {id:'carrot_cake',           name:'Carrot Cake',                 cat:'TREATS',         ppb:48, days:1},
-  {id:'nanaimo_bars',          name:'Nanaimo Bars',                cat:'TREATS',         ppb:24, days:1},
-  {id:'pound_cake',            name:'Pound Cake',                  cat:'TREATS',         ppb:12, days:1},
-  {id:'lava_cakes',            name:'Lava Cakes (Choc)',           cat:'TREATS',         ppb:16, days:2},
+  {id:'almond_joys',           name:'Almond Joys',                 cat:'TREATS',         ppb:24, days:2, posAlias:['almond joy','almond joys','almond']},
+  {id:'blueberry_danish',      name:'Blueberry Danish',            cat:'TREATS',         ppb:4,  days:2, posAlias:['blueberry danish','danish blueberry']},
+  {id:'butter_tart_pecan',     name:'Butter Tart (Pecan)',         cat:'TREATS',         ppb:12, days:1, posAlias:['pecan butter tart','pecan (buttertart)','pecan bt','butter tart pecan','pecan tart']},
+  {id:'butter_tart_plain',     name:'Butter Tart (Plain)',         cat:'TREATS',         ppb:12, days:1, posAlias:['plain butter tart','plain (buttertart)','plain bt','butter tart plain','plain tart','plain']},
+  {id:'butter_tart_raisin',    name:'Butter Tart (Raisin)',        cat:'TREATS',         ppb:12, days:1, posAlias:['raisin butter tart','raisin (buttertart)','raisin bt','butter tart raisin','raisin tart','raisin']},
+  {id:'butterscotch_brownies', name:'Butterscotch Brownies',       cat:'TREATS',         ppb:24, days:1, posAlias:['butterscotch','butterscotch brownie','butterscotch brownies','butterscotch square']},
+  {id:'carrot_cake',           name:'Carrot Cake',                 cat:'TREATS',         ppb:48, days:1, posAlias:['carrot cake']},
+  {id:'cheesecake',            name:'Cheesecake (Assorted)',       cat:'TREATS',         ppb:12, days:2, posAlias:['cheesecake','cheese cake','new york cheesecake','ny cheesecake']},
+  {id:'cherry_danish',         name:'Cherry Danish',               cat:'TREATS',         ppb:4,  days:2, posAlias:['cherry danish','danish cherry']},
+  {id:'cookie_dough_brownies', name:'Cookie Dough Brownies',       cat:'TREATS',         ppb:24, days:1, posAlias:['cookie dough brownie','cookie dough brownies','cookie dough']},
+  {id:'date_squares',          name:'Date Squares',                cat:'TREATS',         ppb:24, days:1, posAlias:['date square','date squares']},
+  {id:'fudge_brownies',        name:'Fudge Brownies',              cat:'TREATS',         ppb:24, days:1, posAlias:['brownie','brownies','fudge brownie','fudge brownies','brownie bar']},
+  {id:'german_brownies',       name:'German Brownies',             cat:'TREATS',         ppb:24, days:1, posAlias:['german brownie','german brownies','german chocolate brownie']},
+  {id:'granola_bar_choc',      name:'Granola Bar (Choc)',          cat:'TREATS',         ppb:32, days:1, posAlias:['granola bar','granola bar choc','chocolate granola bar','granola']},
+  {id:'lava_cakes',            name:'Lava Cakes (Choc)',           cat:'TREATS',         ppb:16, days:2, posAlias:['lava cake','lava cakes','chocolate lava cake','lava']},
+  {id:'macaroons',             name:'Macaroons (Reg)',             cat:'TREATS',         ppb:48, days:1, posAlias:['macaroon','macaroons']},
+  {id:'nanaimo_bars',          name:'Nanaimo Bars',                cat:'TREATS',         ppb:24, days:1, posAlias:['nanaimo bar','nanaimo bars','nanaimo']},
+  {id:'pb_marshmallow',        name:'PB Marshmallow Square',       cat:'TREATS',         ppb:24, days:1, posAlias:['pb marshmallow','peanut butter marshmallow','marshmallow square','pb marshmallow square']},
+  {id:'pound_cake',            name:'Pound Cake',                  cat:'TREATS',         ppb:12, days:1, posAlias:['pound cake']},
+  {id:'strudel',               name:'Strudel',                     cat:'TREATS',         ppb:5,  days:2, posAlias:['strudel']},
+  {id:'tiramisu',              name:'Tiramisu',                    cat:'TREATS',         ppb:1,  days:2, posAlias:['tiramisu']},
   // CREAM DESSERTS
-  {id:'coconut_cream_tart',    name:'Coconut Cream Tart',          cat:'CREAM DESSERTS', ppb:1,  days:1},
-  {id:'lemon_meringue',        name:'Lemon Meringue Tart',         cat:'CREAM DESSERTS', ppb:1,  days:1},
-  {id:'banana_cream_tart',     name:'Banana Cream Tart',           cat:'CREAM DESSERTS', ppb:1,  days:1},
-  {id:'tart_shells',           name:'Tart Shells (Cooked)',        cat:'CREAM DESSERTS', ppb:1,  days:1},
-  {id:'canollis',              name:'Canollis',                    cat:'CREAM DESSERTS', ppb:1,  days:1},
-  {id:'cream_horns_straw',     name:'Cream Horns (Strawberry)',    cat:'CREAM DESSERTS', ppb:1,  days:1},
-  {id:'cream_horns_coffee',    name:'Cream Horns (Coffee Cream)',  cat:'CREAM DESSERTS', ppb:1,  days:1},
-  // PIES
-  {id:'apple_pie',             name:'Apple Pie',                   cat:'PIES',           ppb:1,  days:1},
-  {id:'apple_crumble',         name:'Apple Crumble Pie',           cat:'PIES',           ppb:1,  days:1},
-  {id:'raspberry_pie',         name:'Raspberry Pie',               cat:'PIES',           ppb:1,  days:1},
-  {id:'blueberry_pie',         name:'Blueberry Pie',               cat:'PIES',           ppb:1,  days:1},
-  {id:'mixed_berry_pie',       name:'Mixed Berry Pie',             cat:'PIES',           ppb:1,  days:1},
-  {id:'rasp_rhubarb_pie',      name:'Raspberry Rhubarb Pie',       cat:'PIES',           ppb:1,  days:1},
-  {id:'straw_rhubarb_pie',     name:'Strawberry Rhubarb Pie',      cat:'PIES',           ppb:1,  days:1},
-  {id:'cherry_pie',            name:'Cherry Pie',                  cat:'PIES',           ppb:1,  days:1},
-  {id:'peach_pie',             name:'Peach Pie',                   cat:'PIES',           ppb:1,  days:1},
-  {id:'blueberry_peach_pie',   name:'Blueberry Peach Pie',         cat:'PIES',           ppb:1,  days:1},
-  {id:'lb_pies',               name:'LB Pies',                     cat:'PIES',           ppb:1,  days:1},
-  {id:'pecan_pie',             name:'Pecan Pie',                   cat:'PIES',           ppb:1,  days:1},
+  {id:'canollis',              name:'Canollis',                    cat:'CREAM DESSERTS', ppb:1,  days:1, posAlias:['cannoli','canoli','canollis','cannollis']},
+  {id:'tart_shells',           name:'Tart Shells (Cooked)',        cat:'CREAM DESSERTS', ppb:1,  days:1, posAlias:['tart shell','tart shells','pastry shell']},
+  // PIES — Raspberry Rhubarb = red, Blueberry Peach = purple
+  {id:'apple_crumble',         name:'Apple Crumble Pie',           cat:'PIES',           ppb:1,  days:1, posAlias:['apple crumble','apple crumble pie']},
+  {id:'apple_pie',             name:'Apple Pie',                   cat:'PIES',           ppb:1,  days:1, posAlias:['apple pie','apple']},
+  {id:'blueberry_peach_pie',   name:'Blueberry Peach Pie',         cat:'PIES',           ppb:1,  days:1, nameStyle:'color:#6c3483;font-weight:700;', posAlias:['blueberry peach pie','blueberry peach','peach blueberry']},
+  {id:'blueberry_pie',         name:'Blueberry Pie',               cat:'PIES',           ppb:1,  days:1, posAlias:['blueberry pie','blueberry']},
+  {id:'cherry_pie',            name:'Cherry Pie',                  cat:'PIES',           ppb:1,  days:1, posAlias:['cherry pie','cherry']},
+  {id:'mixed_berry_pie',       name:'Mixed Berry Pie',             cat:'PIES',           ppb:1,  days:1, posAlias:['mixed berry pie','mixed berry']},
+  {id:'peach_pie',             name:'Peach Pie',                   cat:'PIES',           ppb:1,  days:1, posAlias:['peach pie','peach']},
+  {id:'raspberry_pie',         name:'Raspberry Pie',               cat:'PIES',           ppb:1,  days:1, posAlias:['raspberry pie','raspberry']},
+  {id:'rasp_rhubarb_pie',      name:'Raspberry Rhubarb Pie',       cat:'PIES',           ppb:1,  days:1, nameStyle:'color:#c0392b;font-weight:700;', posAlias:['raspberry rhubarb pie','raspberry rhubarb','rasp rhubarb','rhubarb raspberry']},
+  {id:'straw_rhubarb_pie',     name:'Strawberry Rhubarb Pie',      cat:'PIES',           ppb:1,  days:1, posAlias:['strawberry rhubarb pie','strawberry rhubarb','straw rhubarb','rhubarb strawberry']},
   // SAVOURY
-  {id:'sausage_roll_maple',    name:'Sausage Roll (Maple Cran)',   cat:'SAVOURY',        ppb:20, days:1},
-  {id:'sausage_roll_hot',      name:'Sausage Roll (Hot)',          cat:'SAVOURY',        ppb:20, days:1},
-  {id:'sausage_roll_garlic',   name:'Sausage Roll (Garlic)',       cat:'SAVOURY',        ppb:20, days:1},
-  {id:'lunch_pie_bbq',         name:'Lunch Pie (BBQ)',             cat:'SAVOURY',        ppb:42, days:1},
-  {id:'lunch_pie_spinach',     name:'Lunch Pie (Spinach)',         cat:'SAVOURY',        ppb:76, days:1},
-  {id:'lunch_pie_thai',        name:'Lunch Pie (Chicken Thai)',    cat:'SAVOURY',        ppb:48, days:1},
-  {id:'pizza_pocket_deluxe',   name:'Pizza Pocket (Deluxe)',       cat:'SAVOURY',        ppb:4,  days:1},
-  {id:'pizza_pocket_pepp',     name:'Pizza Pocket (Pepperoni)',    cat:'SAVOURY',        ppb:4,  days:1},
-  {id:'pizza_pocket_cheese',   name:'Pizza Pocket (Cheese)',       cat:'SAVOURY',        ppb:5,  days:1},
-  {id:'chicken_pot_pie',       name:'Chicken Pot Pie',             cat:'SAVOURY',        ppb:1,  days:1},
-  {id:'beef_pot_pie',          name:'Beef Pot Pie',                cat:'SAVOURY',        ppb:1,  days:1},
-  {id:'tortiere',              name:'Tortière',                    cat:'SAVOURY',        ppb:1,  days:1},
-  {id:'quiches',               name:'Quiches (Assorted)',          cat:'SAVOURY',        ppb:1,  days:1},
-  {id:'lg_lasagna',            name:'Lg Lasagna',                  cat:'SAVOURY',        ppb:1,  days:1},
-  {id:'sm_lasagna',            name:'Sm Lasagna',                  cat:'SAVOURY',        ppb:1,  days:1},
-  {id:'lg_shepherds_pie',      name:"Lg Shepherd's Pie",           cat:'SAVOURY',        ppb:1,  days:1},
-  {id:'sm_shepherds_pie',      name:"Sm Shepherd's Pie",           cat:'SAVOURY',        ppb:1,  days:1},
-  // DAILY
-  {id:'scones',                name:'Scones',                      cat:'DAILY',          ppb:1,  days:1},
-  {id:'muffins_bran',          name:'Muffins (Bran)',              cat:'DAILY',          ppb:56, days:1},
-  {id:'muffins_oat',           name:'Muffins (Oat)',               cat:'DAILY',          ppb:56, days:1},
-  {id:'croissants',            name:'Croissants',                  cat:'DAILY',          ppb:1,  days:2},
-  {id:'cinnamon_buns',         name:'Cinnamon Buns',               cat:'DAILY',          ppb:1,  days:2},
-  {id:'fritters',              name:'Fritters',                    cat:'DAILY',          ppb:1,  days:1},
-  {id:'breads',                name:'Breads',                      cat:'DAILY',          ppb:1,  days:2},
-  {id:'frozen_pizzas',         name:'Frozen Pizzas',               cat:'DAILY',          ppb:1,  days:1},
+  {id:'lunch_pie_bbq',         name:'BBQ',                         cat:'SAVOURY',        ppb:42, days:1, posAlias:['bbq','bbq pie','bbq lunch pie','bbq meat pie','barbeque pie']},
+  {id:'beef_pot_pie',          name:'Beef Pot Pie',                cat:'SAVOURY',        ppb:1,  days:1, posAlias:['beef pot pie','beef pot']},
+  {id:'chicken_pot_pie',       name:'Chicken Pot Pie',             cat:'SAVOURY',        ppb:1,  days:1, posAlias:['chicken pot pie','chicken pot']},
+  {id:'lunch_pie_thai',        name:'Chicken Thai',                cat:'SAVOURY',        ppb:48, days:1, posAlias:['chicken thai','thai chicken','chicken thai pie','thai pie']},
+  {id:'lg_lasagna',            name:'Lg Lasagna',                  cat:'SAVOURY',        ppb:1,  days:1, posAlias:['lasagna','large lasagna','lg lasagna']},
+  {id:'lg_shepherds_pie',      name:"Lg Shepherd's Pie",           cat:'SAVOURY',        ppb:1,  days:1, posAlias:["shepherd's pie",'shepherds pie','large shepherd','lg shepherd']},
+  {id:'pizza_pocket_deluxe',   name:'Pizza Pocket (Deluxe)',       cat:'SAVOURY',        ppb:4,  days:1, posAlias:['pizza pocket deluxe','deluxe pizza pocket','deluxe pocket','pizza pocket']},
+  {id:'pizza_pocket_pepp',     name:'Pizza Pocket (Pepperoni)',    cat:'SAVOURY',        ppb:4,  days:1, posAlias:['pizza pocket pepperoni','pepperoni pocket','pepperoni pizza pocket']},
+  {id:'quiches',               name:'Quiches (Assorted)',          cat:'SAVOURY',        ppb:1,  days:1, posAlias:['quiche','quiches']},
+  {id:'sausage_roll_garlic',   name:'Sausage Roll (Garlic)',       cat:'SAVOURY',        ppb:20, days:1, posAlias:['garlic sausage roll','sausage roll garlic','garlic sausage']},
+  {id:'sausage_roll_hot',      name:'Sausage Roll (Hot)',          cat:'SAVOURY',        ppb:20, days:1, posAlias:['hot sausage roll','sausage roll hot','hot sausage','spicy sausage roll']},
+  {id:'sausage_roll_maple',    name:'Sausage Roll (Maple Cran)',   cat:'SAVOURY',        ppb:20, days:1, posAlias:['maple cran sausage roll','sausage roll maple','maple sausage','maple cranberry sausage','maple cran sausage','maple sausage roll']},
+  {id:'sm_lasagna',            name:'Sm Lasagna',                  cat:'SAVOURY',        ppb:1,  days:1, posAlias:['small lasagna','sm lasagna']},
+  {id:'sm_shepherds_pie',      name:"Sm Shepherd's Pie",           cat:'SAVOURY',        ppb:1,  days:1, posAlias:['small shepherd','sm shepherd']},
+  {id:'lunch_pie_spinach',     name:'Spinach',                     cat:'SAVOURY',        ppb:76, days:1, posAlias:['spinach','spinach pie','spinach lunch pie']},
+  {id:'tortiere',              name:'Tortière',                    cat:'SAVOURY',        ppb:1,  days:1, posAlias:['tourtiere','tourtière','tortiere','tortière','meat pie']},
   // BASES & PREP
-  {id:'cheesecake_bases',      name:'Cheesecake Bases',            cat:'BASES & PREP',   ppb:1,  days:1},
-  {id:'brownie_bases',         name:'Brownie Bases',               cat:'BASES & PREP',   ppb:1,  days:1},
-  {id:'carrot_cake_bases',     name:'Carrot Cake Bases',           cat:'BASES & PREP',   ppb:1,  days:1},
-  {id:'lava_cake_bases',       name:'Lava Cake Bases',             cat:'BASES & PREP',   ppb:1,  days:2},
-  {id:'cream_cheese_icing',    name:'Cream Cheese Icing',          cat:'BASES & PREP',   ppb:1,  days:1},
-  {id:'pie_mixes',             name:'Pie Mixes',                   cat:'BASES & PREP',   ppb:1,  days:1},
-  {id:'veg_packs',             name:'Veg Packs',                   cat:'BASES & PREP',   ppb:1,  days:1},
+  {id:'brownie_bases',         name:'Brownie Bases',               cat:'BASES & PREP',   ppb:1,  days:1, posAlias:['brownie base','brownie bases']},
+  {id:'carrot_cake_bases',     name:'Carrot Cake Bases',           cat:'BASES & PREP',   ppb:1,  days:1, posAlias:['carrot cake base','carrot base']},
+  {id:'cheesecake_bases',      name:'Cheesecake Bases',            cat:'BASES & PREP',   ppb:1,  days:1, posAlias:['cheesecake base','cheesecake bases']},
+  {id:'cream_cheese_icing',    name:'Cream Cheese Icing',          cat:'BASES & PREP',   ppb:1,  days:1, posAlias:['cream cheese icing','cc icing']},
+  {id:'lava_cake_bases',       name:'Lava Cake Bases',             cat:'BASES & PREP',   ppb:1,  days:2, posAlias:['lava cake base','lava base']},
+  {id:'pie_mixes',             name:'Pie Mixes',                   cat:'BASES & PREP',   ppb:1,  days:1, posAlias:['pie mix','pie mixes']},
+  {id:'veg_packs',             name:'Veg Packs',                   cat:'BASES & PREP',   ppb:1,  days:1, posAlias:['veg pack','veg packs','vegetable pack']},
 ];
 
 const CATS = [...new Set(PRODUCTS.map(p => p.cat))];
 
 // ============================================================
-// STATE
+// STATE — weekly structure
 // ============================================================
 let S = {
-  inventory: {}, prevInventory: {}, sales: {}, stockpile: {},
-  lastSaved: null, salesDate: null,
+  weeks: {},       // keyed 'YYYY-MM-DD' (Monday) → {inventory,sales,made,wasted,checked,savedAt}
+  stockpile: {},
 };
 
 const API_SECRET = '3zzJMvS72_sjN2oYRGeJhA';
 let apiUrl = (localStorage.getItem('bakery_api_url') || '').replace(/\/$/, '');
 let saveTimer = null;
+let activeWeek = getWeekKey();
 
-function getInStock(id) { return (S.inventory[id]?.total) || 0; }
-function getSold(id) { return S.sales[id] || 0; }
+// ============================================================
+// WEEK HELPERS
+// ============================================================
+function getWeekKey(date) {
+  const d = new Date(date || new Date());
+  const day = d.getDay() || 7;
+  const mon = new Date(d);
+  mon.setDate(d.getDate() - day + 1);
+  mon.setHours(0, 0, 0, 0);
+  return mon.toISOString().slice(0, 10);
+}
+
+function getWeekLabel(key) {
+  const mon = new Date(key + 'T12:00:00');
+  const sun = new Date(mon);
+  sun.setDate(mon.getDate() + 6);
+  const fmt = d => d.toLocaleDateString('en-CA', { month: 'short', day: 'numeric' });
+  return `${fmt(mon)} – ${fmt(sun)}`;
+}
+
+function getRecentWeeks(n) {
+  const result = []; const seen = new Set();
+  for (let i = 0; i < n; i++) {
+    const d = new Date(); d.setDate(d.getDate() - i * 7);
+    const k = getWeekKey(d);
+    if (!seen.has(k)) { seen.add(k); result.push(k); }
+  }
+  return result;
+}
+
+function ensureWeek(key) {
+  if (!S.weeks[key]) S.weeks[key] = { inventory:{}, sales:{}, made:{}, wasted:{}, checked:{}, savedAt:null };
+}
+
+function getWD(key) { ensureWeek(key || activeWeek); return S.weeks[key || activeWeek]; }
+
+function getInStock(id) { return getWD().inventory[id]?.total || 0; }
+function getSold(id)    { return getWD().sales[id] || 0; }
+function getMade(id)    { return getWD().made[id] || 0; }
+function getWasted(id)  { return getWD().wasted[id] || 0; }
 function getStockpile(id) { return S.stockpile[id] || 0; }
-function getAdj() { return parseFloat(document.getElementById('adjPct').value) || 1.20; }
+function getAdj() { return parseFloat(document.getElementById('adjPct')?.value) || 1.20; }
+
+function renderWeekTabs(containerId, onSelectFn) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  const weeks = getRecentWeeks(5);
+  // Also include any saved weeks not in recent 5
+  Object.keys(S.weeks).forEach(k => { if (!weeks.includes(k)) weeks.push(k); });
+  weeks.sort((a,b) => b.localeCompare(a)); // newest first
+  container.innerHTML = weeks.slice(0, 6).map(k => {
+    const isActive = k === activeWeek;
+    const hasSaved = S.weeks[k]?.savedAt;
+    const lbl = getWeekLabel(k);
+    const shortLbl = k === getWeekKey() ? `📅 This Week` : lbl.split(' – ')[0];
+    return `<button class="week-tab${isActive?' active':''}" onclick="(${onSelectFn})('${k}')">${shortLbl}${hasSaved?'':' ·'}</button>`;
+  }).join('');
+}
 
 // ============================================================
 // RAILWAY API SYNC
@@ -450,15 +610,14 @@ function getAdj() { return parseFloat(document.getElementById('adjPct').value) |
 async function pullFromAPI() {
   if (!apiUrl) return false;
   try {
-    const res = await fetch(apiUrl + '/data?secret=' + encodeURIComponent(API_SECRET), { cache: 'no-store' });
+    const res = await fetch(apiUrl + '/data?secret=' + encodeURIComponent(API_SECRET), { cache:'no-store' });
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();
-    // Merge remote data, preserving local keys not present remotely
     S = Object.assign({}, S, data);
     setSyncBadge('live', '🟢 Live sync');
     return true;
   } catch(e) {
-    setSyncBadge('error', '🔴 Sync error — using local');
+    setSyncBadge('error', '🔴 Sync error');
     return false;
   }
 }
@@ -468,40 +627,30 @@ async function pushToAPI() {
   setSyncBadge('saving', '⏳ Saving…');
   try {
     const res = await fetch(apiUrl + '/data?secret=' + encodeURIComponent(API_SECRET), {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(S)
+      method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(S)
     });
     if (!res.ok) throw new Error('HTTP ' + res.status);
     setSyncBadge('live', '🟢 Saved');
-    persistLocal(); // also keep local copy
+    persistLocal();
   } catch(e) {
-    setSyncBadge('error', '🔴 Save failed — saved locally');
+    setSyncBadge('error', '🔴 Save failed');
     persistLocal();
   }
 }
 
-function persistLocal() {
-  try { localStorage.setItem('bakery_local', JSON.stringify(S)); } catch(e){}
-}
+function persistLocal() { try { localStorage.setItem('bakery_local', JSON.stringify(S)); } catch(e){} }
 
 function persist() {
   persistLocal();
-  if (apiUrl) {
-    clearTimeout(saveTimer);
-    saveTimer = setTimeout(pushToAPI, 600);
-  }
+  if (apiUrl) { clearTimeout(saveTimer); saveTimer = setTimeout(pushToAPI, 600); }
 }
 
 function setSyncBadge(cls, txt) {
   const el = document.getElementById('syncBadge');
-  el.className = 'sync-badge' + (cls ? ' ' + cls : '');
+  el.className = 'sync-badge' + (cls ? ' '+cls : '');
   el.textContent = txt;
 }
 
-// ============================================================
-// RAILWAY URL SETTINGS
-// ============================================================
 window.saveRailwayUrl = async function() {
   const input = document.getElementById('railwayUrlInput');
   const statusEl = document.getElementById('railwayStatus');
@@ -510,16 +659,15 @@ window.saveRailwayUrl = async function() {
   if (!url.startsWith('http')) url = 'https://' + url;
   statusEl.textContent = '⏳ Testing connection…';
   try {
-    const res = await fetch(url + '/', { cache: 'no-store' });
+    const res = await fetch(url + '/', { cache:'no-store' });
     const json = await res.json();
     if (!json.status) throw new Error('Unexpected response');
     localStorage.setItem('bakery_api_url', url);
     apiUrl = url;
     statusEl.textContent = '✅ Connected! Syncing now…';
-    setSyncBadge('saving', '⏳ Syncing…');
     const ok = await pullFromAPI();
-    if (ok) renderInventory();
-    statusEl.textContent = '✅ Connected — data synced across all devices.';
+    if (ok) { renderInventory(); }
+    statusEl.textContent = '✅ Connected — syncs across all devices.';
     showToast('🔗 Railway connected!');
   } catch(e) {
     statusEl.textContent = '❌ Could not connect. Check the URL and try again.';
@@ -535,37 +683,45 @@ window.switchTab = function(tab) {
   document.getElementById('tab-' + tab).classList.add('active');
   document.getElementById('nav-' + tab).classList.add('active');
   if (tab === 'priority') renderPriority();
-  if (tab === 'production') renderProduction();
+  if (tab === 'production') { renderWeekTabs('prodWeekTabs', 'selectWeek'); renderProduction(); }
   if (tab === 'settings') renderSettings();
+  if (tab === 'inventory') { renderWeekTabs('invWeekTabs', 'selectWeek'); }
+};
+
+window.selectWeek = function(key) {
+  activeWeek = key;
+  renderWeekTabs('invWeekTabs', 'selectWeek');
+  renderWeekTabs('prodWeekTabs', 'selectWeek');
+  renderInventory();
+  if (document.getElementById('tab-production').classList.contains('active')) renderProduction();
 };
 
 // ============================================================
 // INVENTORY
 // ============================================================
 function renderInventory() {
+  renderWeekTabs('invWeekTabs', 'selectWeek');
   let html = '';
   CATS.forEach(cat => {
     const items = PRODUCTS.filter(p => p.cat === cat);
-    html += `<div class="card">
+    html += `<div class="card" style="margin-bottom:10px;">
       <div class="card-header" onclick="toggleCard(this.parentElement)">
         <span>${cat} <span style="font-weight:400;opacity:0.6;">(${items.length})</span></span>
         <svg class="collapse-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
       </div>
       <div class="card-body">`;
     items.forEach(p => {
-      const v = S.inventory[p.id] || {c1:'',c2:'',c3:'',c4:'',total:0};
-      html += `<div class="product-row">
-        <div class="product-name">
-          ${p.name}${p.days===2?' <span class="two-day-badge">2-day</span>':''}
-        </div>
+      const v = getWD().inventory[p.id] || {c1:'',c2:'',c3:'',c4:'',total:0};
+      html += `<div class="product-row" data-name="${p.name.toLowerCase()}">
+        <div class="product-name" style="${p.nameStyle||''}">${p.name}</div>
         <div class="stock-row">
-          <input type="number" inputmode="numeric" class="stock-input" placeholder="0"
+          <input type="number" inputmode="numeric" class="stock-input ci-1" placeholder="0"
             value="${v.c1||''}" oninput="updateCol('${p.id}',0,this.value)" onfocus="this.select()">
-          <input type="number" inputmode="numeric" class="stock-input" placeholder="0"
+          <input type="number" inputmode="numeric" class="stock-input ci-2" placeholder="0"
             value="${v.c2||''}" oninput="updateCol('${p.id}',1,this.value)" onfocus="this.select()">
-          <input type="number" inputmode="numeric" class="stock-input" placeholder="0"
+          <input type="number" inputmode="numeric" class="stock-input ci-3" placeholder="0"
             value="${v.c3||''}" oninput="updateCol('${p.id}',2,this.value)" onfocus="this.select()">
-          <input type="number" inputmode="numeric" class="stock-input" placeholder="0"
+          <input type="number" inputmode="numeric" class="stock-input ci-4" placeholder="0"
             value="${v.c4||''}" oninput="updateCol('${p.id}',3,this.value)" onfocus="this.select()">
           <div class="stock-total" id="tot_${p.id}">${v.total||0}</div>
         </div>
@@ -577,10 +733,10 @@ function renderInventory() {
 }
 
 window.updateCol = function(id, col, val) {
-  if (!S.inventory[id]) S.inventory[id] = {c1:0,c2:0,c3:0,c4:0,total:0};
-  const k = ['c1','c2','c3','c4'][col];
-  S.inventory[id][k] = parseInt(val)||0;
-  const v = S.inventory[id];
+  const wd = getWD();
+  if (!wd.inventory[id]) wd.inventory[id] = {c1:0,c2:0,c3:0,c4:0,total:0};
+  wd.inventory[id][['c1','c2','c3','c4'][col]] = parseInt(val)||0;
+  const v = wd.inventory[id];
   v.total = (v.c1||0)+(v.c2||0)+(v.c3||0)+(v.c4||0);
   const el = document.getElementById('tot_'+id);
   if (el) el.textContent = v.total;
@@ -588,23 +744,34 @@ window.updateCol = function(id, col, val) {
 };
 
 window.saveInventory = async function() {
-  const hasData = Object.values(S.inventory).some(v => v.total > 0);
-  if (hasData && S.lastSaved) S.prevInventory = JSON.parse(JSON.stringify(S.inventory));
-  S.lastSaved = new Date().toISOString();
-  persistLocal();
+  const wd = getWD();
+  wd.savedAt = new Date().toISOString();
   const btn = document.getElementById('saveBtn');
   btn.innerHTML = '<span class="spinner"></span> Saving…';
   btn.disabled = true;
   await pushToAPI();
   btn.innerHTML = '💾 Save Inventory for This Week';
   btn.disabled = false;
-  showToast(apiUrl ? '✅ Inventory saved & synced!' : '✅ Inventory saved locally!');
+  // Show green popup with timestamp
+  const d = new Date(wd.savedAt);
+  const timeStr = d.toLocaleString('en-CA', { weekday:'long', year:'numeric', month:'long', day:'numeric', hour:'numeric', minute:'2-digit', hour12:true });
+  document.getElementById('saveModalTime').textContent = timeStr;
+  document.getElementById('saveModal').classList.add('show');
+  renderWeekTabs('invWeekTabs', 'selectWeek');
 };
 
 window.toggleCard = function(card) { card.classList.toggle('collapsed'); };
 
+window.searchInventory = function(q) {
+  const term = q.toLowerCase();
+  document.querySelectorAll('#inventoryList .product-row').forEach(row => {
+    const name = row.dataset.name || '';
+    row.classList.toggle('hidden', term.length > 0 && !name.includes(term));
+  });
+};
+
 // ============================================================
-// CSV UPLOAD  — supports your POS "Sales By Product" format
+// CSV UPLOAD — POS "Sales By Product" format + standard CSVs
 // ============================================================
 window.handleCSV = function(input) {
   const file = input.files[0];
@@ -616,19 +783,12 @@ window.handleCSV = function(input) {
 };
 
 function splitCSVRow(line, delim) {
-  const result = [];
-  let field = '';
-  let inQuotes = false;
+  const result = []; let field = ''; let inQ = false;
   for (let i = 0; i < line.length; i++) {
     const ch = line[i];
-    if (ch === '"') {
-      inQuotes = !inQuotes;
-    } else if (ch === delim && !inQuotes) {
-      result.push(field.trim());
-      field = '';
-    } else {
-      field += ch;
-    }
+    if (ch === '"') { inQ = !inQ; }
+    else if (ch === delim && !inQ) { result.push(field.trim()); field = ''; }
+    else { field += ch; }
   }
   result.push(field.trim());
   return result;
@@ -639,30 +799,25 @@ function parseCSV(text, fname) {
   if (lines.length < 2) { showUploadStatus('error', 'File appears empty.'); return; }
 
   // Detect delimiter
-  const firstLine = lines[0];
   let delim = ',';
-  for (const d of [',', '\t', ';', '|']) {
+  for (const d of [',','\t',';','|']) {
     const esc = d === '|' ? '\\|' : d;
-    if ((firstLine.match(new RegExp(esc, 'g')) || []).length > 2) { delim = d; break; }
+    if ((lines[0].match(new RegExp(esc,'g'))||[]).length > 2) { delim = d; break; }
   }
 
-  // -------------------------------------------------------
-  // Detect POS "Sales By Product" format:
-  // Every row repeats the full report header.
-  // Item name = col 11, qty sold = col 13.
-  // Items appear many times with identical qty — deduplicate.
-  // -------------------------------------------------------
-  const sampleRows = lines.slice(0, Math.min(30, lines.length)).map(l => splitCSVRow(l, delim));
-  const numericAt13 = sampleRows.filter(cols => cols.length >= 14 && !isNaN(parseFloat(cols[13])) && cols[11].length > 1).length;
-  const isPOSFormat = numericAt13 >= Math.min(5, lines.length - 1);
+  // Detect POS "Sales By Product" format: col 11 = name, col 13 = qty, repeated headers
+  const sample = lines.slice(0, Math.min(30, lines.length)).map(l => splitCSVRow(l, delim));
+  const validPOS = sample.filter(cols =>
+    cols.length >= 14 && !isNaN(parseFloat(cols[13])) && cols[11].trim().length > 1
+  ).length;
+  const isPOS = validPOS >= Math.min(5, lines.length - 1);
 
   const newSales = {};
   const unmatched = [];
   let matched = 0;
 
-  if (isPOSFormat) {
-    // Each unique item name → qty (use first occurrence, all dups are same value)
-    const seenItems = new Map();
+  if (isPOS) {
+    const seen = new Map();
     lines.forEach(line => {
       const cols = splitCSVRow(line, delim);
       if (cols.length < 14) return;
@@ -670,38 +825,26 @@ function parseCSV(text, fname) {
       const qty = parseFloat(cols[13]);
       if (!rawName || isNaN(qty) || qty <= 0) return;
       const key = rawName.toLowerCase();
-      // Skip header-like rows where col 11 is literally a column heading
       if (key === 'item' || key === 'item name' || key === 'name' || key === 'product') return;
-      if (!seenItems.has(key)) {
-        seenItems.set(key, { name: rawName, qty: qty });
-      }
+      if (!seen.has(key)) seen.set(key, { name: rawName, qty });
     });
-
-    seenItems.forEach(({ name, qty }) => {
+    seen.forEach(({ name, qty }) => {
       const prod = fuzzyMatch(name);
-      if (prod) {
-        newSales[prod.id] = (newSales[prod.id] || 0) + qty;
-        matched++;
-      } else if (name.length > 2) {
-        unmatched.push(name);
-      }
+      if (prod) { newSales[prod.id] = (newSales[prod.id]||0) + qty; matched++; }
+      else if (name.length > 2) unmatched.push(name);
     });
-
   } else {
-    // Standard CSV — detect header columns
     const headers = splitCSVRow(lines[0], delim).map(h => h.replace(/['"]/g,'').toLowerCase());
     const nameKW = ['item','name','product','description','menu','sku','title'];
-    const qtyKW  = ['qty','quantity','sold','units','amount','count','total','sales'];
+    const qtyKW  = ['qty','quantity','sold','units','amount','count','sales'];
     let nameCol = headers.findIndex(h => nameKW.some(k => h.includes(k)));
     let qtyCol  = headers.findIndex(h => qtyKW.some(k => h.includes(k)));
     if (nameCol < 0) nameCol = 0;
-    if (qtyCol  < 0) qtyCol  = 1;
-
+    if (qtyCol < 0) qtyCol = 1;
     lines.slice(1).forEach(line => {
       if (!line.trim()) return;
       const cols = splitCSVRow(line, delim);
-      const itemName = cols[nameCol];
-      const qty = parseFloat(cols[qtyCol]);
+      const itemName = cols[nameCol]; const qty = parseFloat(cols[qtyCol]);
       if (!itemName || isNaN(qty) || qty < 0) return;
       const prod = fuzzyMatch(itemName);
       if (prod) { newSales[prod.id] = (newSales[prod.id]||0) + qty; matched++; }
@@ -709,85 +852,50 @@ function parseCSV(text, fname) {
     });
   }
 
-  S.sales = newSales;
-  S.salesDate = new Date().toISOString();
+  getWD().sales = newSales;
   persist();
 
-  const formatNote = isPOSFormat ? ' (POS format detected)' : '';
-  const unmatchedNote = unmatched.length
-    ? ` — ${unmatched.length} unrecognized: ${unmatched.slice(0,4).join(', ')}${unmatched.length>4?'…':''}`
-    : '';
-  showUploadStatus('success', `✅ ${matched} items loaded from "${fname}"${formatNote}${unmatchedNote}`);
+  const note = unmatched.length ? ` — ${unmatched.length} unrecognized: ${unmatched.slice(0,4).join(', ')}${unmatched.length>4?'…':''}` : '';
+  showUploadStatus('success', `✅ ${matched} products loaded${isPOS?' (POS format)':''}${note}`);
   showToast(`📊 Sales loaded: ${matched} products`);
 }
 
 function fuzzyMatch(name) {
-  const n = name.toLowerCase().trim()
-    .replace(/\(buttertart\)/g, 'butter tart')
-    .replace(/\(bt\)/g, 'butter tart');
+  const n = name.toLowerCase().trim();
 
-  // 1. Exact match (case-insensitive)
+  // 1. Exact posAlias match — most reliable
+  for (const p of PRODUCTS) {
+    if (p.posAlias && p.posAlias.includes(n)) return p;
+  }
+
+  // 2. Exact name match (case-insensitive)
   for (const p of PRODUCTS) {
     if (p.name.toLowerCase() === n) return p;
   }
 
-  // 2. One fully contains the other
-  for (const p of PRODUCTS) {
-    const pn = p.name.toLowerCase();
-    if (pn.includes(n) || n.includes(pn)) return p;
+  // 3. n is contained in exactly ONE product's name (avoids "brownie" matching multiple)
+  const containedIn = PRODUCTS.filter(p => p.name.toLowerCase().includes(n));
+  if (containedIn.length === 1) return containedIn[0];
+
+  // 4. Product name contained in n (POS name is more verbose)
+  const containsProduct = PRODUCTS.filter(p => n.includes(p.name.toLowerCase()));
+  if (containsProduct.length === 1) return containsProduct[0];
+  if (containsProduct.length > 1) {
+    // Pick the most specific match (longest product name)
+    return containsProduct.sort((a,b) => b.name.length - a.name.length)[0];
   }
 
-  // 3. Significant word overlap (4+ char words)
+  // 5. Word overlap (4+ char words)
+  const nWords = n.split(/[\s()+,\-]+/).filter(w => w.length >= 3);
+  let bestMatch = null, bestScore = 0;
   for (const p of PRODUCTS) {
     const pWords = p.name.toLowerCase().split(/\s+/).filter(w => w.length >= 4);
-    const nWords = n.split(/[\s()+,]+/).filter(w => w.length >= 3);
     const hits = pWords.filter(pw => nWords.some(nw => nw.includes(pw) || pw.includes(nw)));
-    if (hits.length >= 2 || (hits.length === 1 && pWords.length <= 2)) return p;
+    const score = hits.length / Math.max(pWords.length, 1);
+    if (hits.length >= 2 && score > bestScore) { bestScore = score; bestMatch = p; }
+    else if (hits.length === 1 && pWords.length <= 2 && score > bestScore) { bestScore = score; bestMatch = p; }
   }
-
-  // 4. Single keyword match for short product names
-  const keywordMap = [
-    { keys: ['brownie','browny'],      id: 'fudge_brownies'      },
-    { keys: ['butterscotch'],          id: 'butterscotch_brownies'},
-    { keys: ['danish'],                id: 'blueberry_danish'     },
-    { keys: ['scone'],                 id: 'scones'               },
-    { keys: ['cookie','cookies'],      id: 'choc_cookies'         },
-    { keys: ['granola'],               id: 'granola_bar_choc'     },
-    { keys: ['cheesecake','cheese cake','cheese-cake'], id: 'cheesecake' },
-    { keys: ['nanaimo'],               id: 'nanaimo_bars'         },
-    { keys: ['carrot'],                id: 'carrot_cake'          },
-    { keys: ['tiramisu'],              id: 'tiramisu'             },
-    { keys: ['strudel'],               id: 'strudel'              },
-    { keys: ['croissant'],             id: 'croissants'           },
-    { keys: ['cinnamon'],              id: 'cinnamon_buns'        },
-    { keys: ['muffin'],                id: 'muffins_bran'         },
-    { keys: ['scones'],                id: 'scones'               },
-    { keys: ['macaroon'],              id: 'macaroons'            },
-    { keys: ['fritter'],               id: 'fritters'             },
-    { keys: ['pizza pocket'],          id: 'pizza_pocket_deluxe'  },
-    { keys: ['lunch pie'],             id: 'lunch_pie_bbq'        },
-    { keys: ['sausage roll'],          id: 'sausage_roll_maple'   },
-    { keys: ['quiche'],                id: 'quiches'              },
-    { keys: ['lasagna'],               id: 'lg_lasagna'           },
-    { keys: ['shepherd'],              id: 'lg_shepherds_pie'     },
-    { keys: ['tortiere','tourtiere'],  id: 'tortiere'             },
-    { keys: ['canoli','cannoli'],       id: 'canollis'             },
-    { keys: ['cream horn'],            id: 'cream_horns_straw'    },
-    { keys: ['lemon meringue'],        id: 'lemon_meringue'       },
-    { keys: ['banana cream'],          id: 'banana_cream_tart'    },
-    { keys: ['coconut cream'],         id: 'coconut_cream_tart'   },
-    { keys: ['date square'],           id: 'date_squares'         },
-    { keys: ['lava'],                  id: 'lava_cakes'           },
-    { keys: ['pound cake'],            id: 'pound_cake'           },
-    { keys: ['almond joy'],            id: 'almond_joys'          },
-  ];
-  for (const { keys, id } of keywordMap) {
-    if (keys.some(k => n.includes(k))) {
-      return PRODUCTS.find(p => p.id === id) || null;
-    }
-  }
-
-  return null;
+  return bestMatch;
 }
 
 function showUploadStatus(type, msg) {
@@ -808,51 +916,64 @@ window.toggleDetails = function() {
   renderPriority();
 };
 
+window.toggleCheck = function(id) {
+  const wd = getWD();
+  wd.checked = wd.checked || {};
+  wd.checked[id] = !wd.checked[id];
+  persist();
+  renderPriority();
+};
+
 function renderPriority() {
   const adj = getAdj();
   const container = document.getElementById('priorityList');
+  const checked = getWD().checked || {};
 
   const data = PRODUCTS.map(p => {
     const inStock   = getInStock(p.id);
     const sold      = getSold(p.id);
+    const wasted    = getWasted(p.id);
+    const effectiveSold = sold + wasted;
     const stockpile = getStockpile(p.id);
-    const scoreA    = (sold * adj) - inStock;
-    const needed    = Math.max(0, (sold * adj) + stockpile - inStock);
+    const scoreA    = (effectiveSold * adj) - inStock;
+    const needed    = Math.max(0, Math.round((effectiveSold * adj) + stockpile - inStock));
     const batches   = p.ppb > 1 ? Math.ceil(needed / p.ppb) : needed;
-    return { ...p, inStock, sold, scoreA, needed, batches };
+    return { ...p, inStock, sold, effectiveSold, scoreA, needed, batches };
   });
 
   const byA = [...data].sort((a,b) => b.scoreA - a.scoreA);
-  byA.forEach((p,i) => { p.rankA = i+1; });
+  byA.forEach((p,i) => p.rankA = i+1);
   const byB = [...data].sort((a,b) => a.inStock - b.inStock);
-  byB.forEach((p,i) => { p.rankB = i+1; });
-  data.forEach(p => { p.finalRank = (p.rankA + p.rankB) / 2; });
+  byB.forEach((p,i) => p.rankB = i+1);
+  data.forEach(p => p.finalRank = (p.rankA + p.rankB) / 2);
   data.sort((a,b) => a.finalRank - b.finalRank);
-
-  if (!data.length) { container.innerHTML = '<div class="no-data">No products.</div>'; return; }
 
   let html = '';
   data.forEach((p, i) => {
     const rank = i+1;
+    const isDone = !!checked[p.id];
     let subText, subClass;
     if (p.needed > 0) {
-      const bLabel = p.ppb > 1 ? `${p.needed} pcs — ${p.batches} batch${p.batches!==1?'es':''}` : `${p.needed} pcs`;
-      subText = `Make ${bLabel}${p.days===2?' ⚠️ 2-day':''}`;
+      const pcsSpan = `<span style="color:var(--danger)">${p.needed} pcs</span>`;
+      const batchSpan = p.ppb > 1
+        ? ` — <span style="color:var(--warning);font-weight:700">${p.batches} batch${p.batches!==1?'es':''}</span>`
+        : '';
+      const twoDaySpan = p.days===2 ? ' <span style="color:var(--warning)">⚠️ 2-day</span>' : '';
+      subText = `Make ${pcsSpan}${batchSpan}${twoDaySpan}`;
       subClass = 'urgent';
-    } else if (p.sold === 0) {
-      subText = 'No sales last week';
-      subClass = 'idle';
+    } else if (p.sold === 0 && p.effectiveSold === 0) {
+      subText = 'No sales last week'; subClass = 'idle';
     } else {
-      subText = '✓ Well stocked';
-      subClass = 'good';
+      subText = '✓ Well stocked'; subClass = 'good';
     }
     const sc = p.scoreA >= 0 ? `+${Math.round(p.scoreA)}` : String(Math.round(p.scoreA));
+    const nameHtml = `<span style="${p.nameStyle||''}">${p.name}</span>`;
 
-    html += `<div class="priority-item${rank===1?' top':''}">
+    html += `<div class="priority-item${rank===1&&!isDone?' top':''} ${isDone?'done':''}" onclick="toggleCheck('${p.id}')">
       <div class="priority-main">
         <div class="rank-bubble">${rank}</div>
         <div class="priority-info">
-          <div class="priority-name">${p.name}</div>
+          <div class="priority-name">${nameHtml}</div>
           <div class="priority-sub ${subClass}">${subText}</div>
         </div>
         <div class="score-box">
@@ -860,7 +981,6 @@ function renderPriority() {
           <div class="score-lbl">score</div>
         </div>
       </div>`;
-
     if (showDetails) {
       html += `<div class="detail-row">
         <div class="detail-stat">
@@ -869,11 +989,11 @@ function renderPriority() {
         </div>
         <div class="detail-stat">
           <div class="d-val">${p.sold}</div>
-          <div class="d-lbl">Sold Last Wk</div>
+          <div class="d-lbl">Sold</div>
         </div>
         <div class="detail-stat">
           <div class="d-val${p.needed>0?' red':' green'}">${p.needed>0?p.needed+' pcs':'✓'}</div>
-          <div class="d-lbl">${p.needed>0?'Need to Make':'OK'}</div>
+          <div class="d-lbl">${p.needed>0?'Need':'OK'}</div>
         </div>
       </div>`;
     }
@@ -882,50 +1002,119 @@ function renderPriority() {
   container.innerHTML = html;
 }
 
+window.searchPriority = function(q) {
+  const term = q.toLowerCase();
+  document.querySelectorAll('#priorityList .priority-item').forEach(el => {
+    const name = el.querySelector('.priority-name')?.textContent.toLowerCase() || '';
+    el.classList.toggle('hidden', term.length > 0 && !name.includes(term));
+  });
+};
+
 // ============================================================
 // PRODUCTION TABLE
 // ============================================================
 function renderProduction() {
   const adj = getAdj();
+  const wd = getWD();
   let html = '';
   CATS.forEach(cat => {
     const items = PRODUCTS.filter(p => p.cat === cat);
-    html += `<div class="prod-cat-title">${cat}</div>
+    html += `<p class="prod-cat-title">${cat}</p>
     <div class="prod-table-wrap">
       <table>
         <thead><tr>
-          <th>Item</th><th>Stock</th><th>Sold</th>
-          <th>Need (pcs)</th><th>Batches</th><th>Time</th><th>Discrepancy</th>
+          <th>Item</th>
+          <th class="col-stock">Stock</th>
+          <th class="col-sold">Sold</th>
+          <th class="col-waste">Waste/<br>Giveaway</th>
+          <th class="col-need">Need<br>(pcs)</th>
+          <th class="col-batch">Batches</th>
+          <th class="col-made">Made<br>This Wk</th>
+          <th class="col-time">Recipe</th>
+          <th class="col-disc">Discrepancy</th>
         </tr></thead><tbody>`;
     items.forEach(p => {
       const inStock   = getInStock(p.id);
       const sold      = getSold(p.id);
+      const wasted    = getWasted(p.id);
+      const made      = getMade(p.id);
+      const effectiveSold = sold + wasted;
       const stockpile = getStockpile(p.id);
-      const needed    = Math.max(0, (sold * adj) + stockpile - inStock);
+      const needed    = Math.max(0, Math.round((effectiveSold * adj) + stockpile - inStock));
       const batches   = p.ppb > 1 ? Math.ceil(needed / p.ppb) : needed;
-      const prevStock = S.prevInventory[p.id]?.total ?? null;
+      // Discrepancy: made + inStock_prev - effectiveSold vs current inStock
+      // Simple version: if "made" entered → show made - effectiveSold (surplus from production)
+      // Otherwise fall back to stock change
       let discStr = '—', discClass = 'td-disc-zero';
-      if (prevStock !== null && sold > 0) {
-        const disc = inStock - (prevStock - sold);
-        if (Math.abs(disc) > 2) {
-          discStr = (disc>0?'+':'')+disc;
-          discClass = disc>0?'td-disc-pos':'td-disc-neg';
-        } else discStr = '~0';
+      if (made > 0) {
+        const surplus = made - effectiveSold;
+        discStr = (surplus >= 0 ? '+' : '') + surplus;
+        discClass = surplus > 0 ? 'td-disc-neg' : surplus < 0 ? 'td-disc-pos' : 'td-disc-zero';
       }
-      html += `<tr>
-        <td class="td-name">${p.name}</td>
-        <td>${inStock}</td>
-        <td>${sold||'—'}</td>
-        <td class="${needed>0?'td-needed':'td-ok'}">${needed>0?needed:'✓'}</td>
-        <td>${needed>0?batches:'—'}</td>
-        <td>${p.days===2?'<span class="two-day-flag">⚠️ 2</span>':'1'}</td>
-        <td class="${discClass}">${discStr}</td>
+      const nameHtml = `<span style="${p.nameStyle||''}">${p.name}</span>`;
+      html += `<tr data-name="${p.name.toLowerCase()}">
+        <td class="td-name">${nameHtml}</td>
+        <td class="col-stock">${inStock}</td>
+        <td class="col-sold">${sold||'—'}</td>
+        <td class="col-waste">
+          <input type="number" inputmode="numeric" class="mini-input col-waste"
+            value="${wasted||''}" placeholder="0"
+            oninput="updateWasted('${p.id}',this.value)" onfocus="this.select()">
+        </td>
+        <td class="col-need ${needed>0?'td-needed':'td-ok'}">${needed>0?needed:'✓'}</td>
+        <td class="col-batch">${needed>0?batches:'—'}</td>
+        <td class="col-made">
+          <input type="number" inputmode="numeric" class="mini-input col-made"
+            value="${made||''}" placeholder="0"
+            oninput="updateMade('${p.id}',this.value)" onfocus="this.select()">
+        </td>
+        <td class="col-time">${p.days===2?'<span class="two-day-flag">⚠️ 2-day</span>':'1 day'}</td>
+        <td class="col-disc ${discClass}">${discStr}</td>
       </tr>`;
     });
     html += `</tbody></table></div>`;
   });
   document.getElementById('productionContent').innerHTML = html;
 }
+
+window.updateMade = function(id, val) {
+  getWD().made[id] = parseInt(val)||0; persist(); updateProductionRow(id);
+};
+window.updateWasted = function(id, val) {
+  getWD().wasted[id] = parseInt(val)||0; persist(); updateProductionRow(id);
+};
+
+function updateProductionRow(id) {
+  // Lightweight re-render: just update calculated cells in the row
+  const adj = getAdj();
+  const p = PRODUCTS.find(pr => pr.id === id);
+  if (!p) return;
+  const inStock = getInStock(id), sold = getSold(id), wasted = getWasted(id), made = getMade(id);
+  const effectiveSold = sold + wasted;
+  const needed = Math.max(0, Math.round((effectiveSold * adj) + getStockpile(id) - inStock));
+  const batches = p.ppb > 1 ? Math.ceil(needed / p.ppb) : needed;
+  const row = document.querySelector(`#productionContent tr[data-name="${p.name.toLowerCase()}"]`);
+  if (!row) return;
+  const cells = row.querySelectorAll('td');
+  cells[4].className = 'col-need ' + (needed > 0 ? 'td-needed' : 'td-ok');
+  cells[4].textContent = needed > 0 ? needed : '✓';
+  cells[5].textContent = needed > 0 ? batches : '—';
+  let discStr = '—', discClass = 'td-disc-zero';
+  if (made > 0) {
+    const surplus = made - effectiveSold;
+    discStr = (surplus >= 0 ? '+' : '') + surplus;
+    discClass = surplus > 0 ? 'td-disc-neg' : surplus < 0 ? 'td-disc-pos' : 'td-disc-zero';
+  }
+  cells[8].className = 'col-disc ' + discClass;
+  cells[8].textContent = discStr;
+}
+
+window.searchProduction = function(q) {
+  const term = q.toLowerCase();
+  document.querySelectorAll('#productionContent tr[data-name]').forEach(row => {
+    row.classList.toggle('hidden', term.length > 0 && !row.dataset.name.includes(term));
+  });
+};
 
 // ============================================================
 // SETTINGS
@@ -942,8 +1131,8 @@ function renderSettings() {
       <div class="card-body">
         <div style="padding:8px 14px;background:var(--bg);font-size:12px;color:var(--text-light);">Min. pcs always in stock</div>`;
     items.forEach(p => {
-      html += `<div class="settings-row">
-        <span class="settings-name">${p.name}</span>
+      html += `<div class="settings-row" data-name="${p.name.toLowerCase()}">
+        <span class="settings-name" style="${p.nameStyle||''}">${p.name}</span>
         <input type="number" inputmode="numeric" class="settings-input"
           id="sp_${p.id}" value="${getStockpile(p.id)}" placeholder="0" min="0">
       </div>`;
@@ -951,8 +1140,6 @@ function renderSettings() {
     html += `</div></div>`;
   });
   document.getElementById('settingsContent').innerHTML = html;
-
-  // Populate Railway URL input if already saved
   const urlInput = document.getElementById('railwayUrlInput');
   if (urlInput && apiUrl) {
     urlInput.value = apiUrl;
@@ -970,11 +1157,18 @@ window.saveSettings = async function() {
 };
 
 window.clearAllData = function() {
-  if (!confirm('Clear ALL inventory, sales and settings? This cannot be undone.')) return;
-  S = { inventory:{}, prevInventory:{}, sales:{}, stockpile:{}, lastSaved:null, salesDate:null };
+  if (!confirm('Clear ALL data? This cannot be undone.')) return;
+  S = { weeks:{}, stockpile:{} };
   persistLocal();
   renderInventory();
   showToast('🗑 All data cleared.');
+};
+
+window.searchSettings = function(q) {
+  const term = q.toLowerCase();
+  document.querySelectorAll('#settingsContent .settings-row').forEach(row => {
+    row.classList.toggle('hidden', term.length > 0 && !(row.dataset.name||'').includes(term));
+  });
 };
 
 // ============================================================
@@ -989,12 +1183,8 @@ window.showToast = function(msg) {
 };
 
 function updateWeekLabel() {
-  const now = new Date();
-  const day = now.getDay();
-  const mon = new Date(now);
-  mon.setDate(now.getDate() - (day===0?6:day-1));
-  const sun = new Date(mon);
-  sun.setDate(mon.getDate()+6);
+  const mon = new Date(activeWeek + 'T12:00:00');
+  const sun = new Date(mon); sun.setDate(mon.getDate()+6);
   const fmt = d => d.toLocaleDateString('en-CA',{month:'short',day:'numeric'});
   document.getElementById('weekLabel').textContent = `Week of ${fmt(mon)} – ${fmt(sun)}`;
 }
@@ -1002,21 +1192,33 @@ function updateWeekLabel() {
 // ============================================================
 // INIT
 // ============================================================
-updateWeekLabel();
-
 // Load local data first (instant)
 try {
   const raw = localStorage.getItem('bakery_local');
-  if (raw) S = Object.assign({}, S, JSON.parse(raw));
+  if (raw) {
+    const parsed = JSON.parse(raw);
+    // Handle old format (before weekly structure)
+    if (parsed.inventory && !parsed.weeks) {
+      S.weeks[activeWeek] = {
+        inventory: parsed.inventory || {},
+        sales: parsed.sales || {},
+        made: {}, wasted: {}, checked: {}, savedAt: parsed.lastSaved || null
+      };
+      S.stockpile = parsed.stockpile || {};
+    } else {
+      S = Object.assign({}, S, parsed);
+    }
+  }
 } catch(e){}
 
+ensureWeek(activeWeek);
+updateWeekLabel();
 renderInventory();
 
-// If Railway URL configured, pull latest from server
 if (apiUrl) {
   setSyncBadge('saving', '⏳ Syncing…');
   pullFromAPI().then(ok => {
-    if (ok) renderInventory();
+    if (ok) { ensureWeek(activeWeek); renderInventory(); }
   });
 } else {
   setSyncBadge('', '📱 Local — add Railway URL in Settings');
