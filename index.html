@@ -55,6 +55,7 @@ body {
 #nav-priority   { background: linear-gradient(to bottom, #1a6fb5, #134e82); }
 #nav-production { background: linear-gradient(to bottom, #2e8b57, #1d5c38); }
 #nav-settings   { background: linear-gradient(to bottom, #7b3fa0, #552a70); }
+#nav-schedule   { background: linear-gradient(to bottom, #c07820, #8a5510); }
 
 /* CONTENT */
 .tab-content { display: none; padding: 0; }
@@ -480,6 +481,12 @@ input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer
     </svg>
     Settings
   </button>
+  <a class="tab-btn" id="nav-schedule" href="schedule.html" style="text-decoration:none;">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+    </svg>
+    Schedule
+  </a>
 </nav>
 
 <script>
@@ -1220,6 +1227,15 @@ function renderPriority() {
     html += `</div>`;
   });
   container.innerHTML = html;
+
+  // Export priority items to localStorage for the Schedule page
+  try {
+    const priorityExport = data.filter(p => p.needed > 0).map(p => ({
+      id: p.id, name: p.name, cat: p.cat, needed: p.needed,
+      batches: p.batches, ppb: p.ppb, days: p.days, scoreA: p.scoreA
+    }));
+    localStorage.setItem('bakeryPriorityItems', JSON.stringify(priorityExport));
+  } catch(e) {}
 }
 
 window.searchPriority = function(q) {
