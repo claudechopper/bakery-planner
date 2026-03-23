@@ -323,6 +323,18 @@ input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer
 </head>
 <body>
 
+<!-- ADD WEEK MODAL -->
+<div class="modal-overlay" id="addWeekModal">
+  <div class="modal-box">
+    <div class="modal-icon">📅</div>
+    <div class="modal-title" style="color:var(--primary);">Add a Week</div>
+    <div class="modal-body" style="color:var(--text);font-size:14px;margin-bottom:16px;">Pick any date — the week starting that Monday will be added.</div>
+    <input type="date" id="addWeekDateInput" style="width:100%;border:1.5px solid var(--border);border-radius:8px;padding:10px;font-size:16px;margin-bottom:14px;background:var(--bg);">
+    <button class="modal-btn" style="margin-bottom:8px;" onclick="confirmAddWeek()">Add Week</button>
+    <button class="modal-btn" style="background:var(--accent);color:var(--primary);margin-top:6px;" onclick="document.getElementById('addWeekModal').classList.remove('show')">Cancel</button>
+  </div>
+</div>
+
 <!-- SAVE MODAL -->
 <div class="modal-overlay" id="saveModal">
   <div class="modal-box">
@@ -488,8 +500,8 @@ const PRODUCTS = [
   {id:'cherry_danish',         name:'Cherry Danish',               cat:'TREATS',         ppb:4,  days:2, posAlias:['cherry danish','danish cherry']},
   {id:'cookie_dough_brownies', name:'Cookie Dough Brownies',       cat:'TREATS',         ppb:24, days:1, posAlias:['cookie dough brownie','cookie dough brownies','cookie dough']},
   {id:'date_squares',          name:'Date Squares',                cat:'TREATS',         ppb:24, days:1, posAlias:['date square','date squares']},
-  {id:'fudge_brownies',        name:'Fudge Brownies',              cat:'TREATS',         ppb:24, days:1, posAlias:['brownie','brownies','fudge brownie','fudge brownies','brownie bar']},
-  {id:'german_brownies',       name:'German Brownies',             cat:'TREATS',         ppb:24, days:1, posAlias:['german brownie','german brownies','german chocolate brownie']},
+  {id:'fudge_brownies',        name:'Fudge Brownies',              cat:'TREATS',         ppb:24, days:1, posAlias:['brownie fudge','fudge brownie','fudge brownies','brownie bar','fudge classic','fudge']},
+  {id:'german_brownies',       name:'German Brownies',             cat:'TREATS',         ppb:24, days:1, posAlias:['german brownie','german brownies','german chocolate brownie','german']},
   {id:'granola_bar_choc',      name:'Granola Bar (Choc)',          cat:'TREATS',         ppb:32, days:1, posAlias:['granola bar','granola bar choc','chocolate granola bar','granola']},
   {id:'lava_cakes',            name:'Lava Cakes (Choc)',           cat:'TREATS',         ppb:16, days:2, posAlias:['lava cake','lava cakes','chocolate lava cake','lava']},
   {id:'macaroons',             name:'Macaroons (Reg)',             cat:'TREATS',         ppb:48, days:1, posAlias:['macaroon','macaroons']},
@@ -530,9 +542,9 @@ const PRODUCTS = [
   {id:'lunch_pie_spinach',     name:'Spinach',                     cat:'SAVOURY',        ppb:76, days:1, posAlias:['spinach','spinach pie','spinach lunch pie']},
   {id:'tortiere',              name:'Tortière',                    cat:'SAVOURY',        ppb:1,  days:1, posAlias:['tourtiere','tourtières','tourtieres','tourtière','tortiere','tortieres','tortière','tortieres','meat pie']},
   // BASES & PREP
-  {id:'brownie_bases',         name:'Brownie Bases',               cat:'BASES & PREP',   ppb:1,  days:1, posAlias:['brownie base','brownie bases']},
-  {id:'carrot_cake_bases',     name:'Carrot Cake Bases',           cat:'BASES & PREP',   ppb:1,  days:1, posAlias:['carrot cake base','carrot base']},
-  {id:'cheesecake_bases',      name:'Cheesecake Bases',            cat:'BASES & PREP',   ppb:1,  days:1, posAlias:['cheesecake base','cheesecake bases']},
+  {id:'brownie_bases',         name:'Brownie Bases',               cat:'BASES & PREP',   ppb:1,  days:1, derivedFrom:{type:'combined', products:['cookie_dough_brownies','fudge_brownies','german_brownies'], piecesPerBase:24}, posAlias:['brownie base','brownie bases']},
+  {id:'carrot_cake_bases',     name:'Carrot Cake Bases',           cat:'BASES & PREP',   ppb:1,  days:1, derivedFrom:{type:'single', productId:'carrot_cake', pcsPerBatch:48, basesPerBatch:6}, posAlias:['carrot cake base','carrot base']},
+  {id:'cheesecake_bases',      name:'Cheesecake Bases',            cat:'BASES & PREP',   ppb:1,  days:1, derivedFrom:{type:'single', productId:'cheesecake', pcsPerBatch:12, basesPerBatch:1}, posAlias:['cheesecake base','cheesecake bases']},
   {id:'cream_cheese_icing',    name:'Cream Cheese Icing',          cat:'BASES & PREP',   ppb:1,  days:1, posAlias:['cream cheese icing','cc icing']},
   {id:'lava_cake_bases',       name:'Lava Cake Bases',             cat:'BASES & PREP',   ppb:1,  days:2, posAlias:['lava cake base','lava base']},
   {id:'pie_mixes',             name:'Pie Mixes',                   cat:'BASES & PREP',   ppb:1,  days:1, posAlias:['pie mix','pie mixes']},
@@ -606,7 +618,7 @@ function renderWeekTabs(containerId, onSelectFn) {
   const weekSet = new Set([current]);
   Object.keys(S.weeks).forEach(k => weekSet.add(k));
   const weeks = [...weekSet].sort((a,b) => b.localeCompare(a));
-  container.innerHTML = weeks.slice(0, 8).map(k => {
+  const tabsHtml = weeks.slice(0, 8).map(k => {
     const isActive = k === activeWeek;
     const isCurrent = k === current;
     const lbl = getWeekLabel(k);
@@ -616,7 +628,33 @@ function renderWeekTabs(containerId, onSelectFn) {
       : '';
     return `<button class="week-tab${isActive?' active':''}" onclick="${onSelectFn}('${k}')">${tabLabel}${delBtn}</button>`;
   }).join('');
+  // Add "+" button to add a new week
+  const addBtn = `<button class="week-tab" onclick="showAddWeekModal()" title="Add a past or future week" style="font-size:18px;padding:4px 12px;border-style:dashed;color:var(--primary);">＋</button>`;
+  container.innerHTML = tabsHtml + addBtn;
 }
+
+window.showAddWeekModal = function() {
+  // Default to previous Monday
+  const prev = new Date(); prev.setDate(prev.getDate() - 7);
+  const prevKey = getWeekKey(prev);
+  document.getElementById('addWeekDateInput').value = prevKey;
+  document.getElementById('addWeekModal').classList.add('show');
+};
+
+window.confirmAddWeek = function() {
+  const val = document.getElementById('addWeekDateInput').value;
+  if (!val) { showToast('⚠️ Please pick a date.'); return; }
+  const key = getWeekKey(new Date(val + 'T12:00:00'));
+  document.getElementById('addWeekModal').classList.remove('show');
+  ensureWeek(key);
+  activeWeek = key;
+  persist();
+  renderWeekTabs('invWeekTabs', 'selectWeek');
+  renderWeekTabs('prodWeekTabs', 'selectWeek');
+  renderInventory();
+  if (document.getElementById('tab-production').classList.contains('active')) renderProduction();
+  showToast(`📅 Week of ${getWeekLabel(key)} added!`);
+};
 
 window.deleteWeek = async function(key, event) {
   event.stopPropagation();
@@ -814,11 +852,25 @@ const CSV_SPLITS = [
   // "PASTRY POCKET" / "PASTRY POCKETS" → 50% Pepperoni + 50% Deluxe
   { aliases: ['pastry pocket','pastry pockets','pizza pocket','pizza pockets'], targets: ['pizza_pocket_pepp','pizza_pocket_deluxe'] },
 ];
-// These POS names represent totals already broken out by individual entries — ignore them
+// These POS names represent totals already broken out by individual entries,
+// or are ingredients/non-bakery items that shouldn't match any product — ignore them
 const CSV_SKIP = [
+  // Generic butter tart total (individual variants tracked separately)
   'butter tarts','butter tart',
+  // Generic sausage roll total (individual variants tracked separately)
   'sausage rolls','sausage roll',
+  // Generic pizza/pastry pocket total (individual variants tracked separately)
   'pizza pockets','pastry pockets',
+  // Generic brownie total — specific variants (butterscotch, fudge, german, cookie dough) each have their own POS entry
+  'brownie','brownies',
+  // Plain cookies — NOT cookie dough brownies
+  'cookie','cookies',
+  // Icing/ingredient — not a finished product
+  'cookie dough icing',
+  // Croissant menu item — not cheesecake
+  'cheese croissant',
+  // Cupcakes — not in our product catalog
+  'cupcake','cupcakes',
 ];
 
 // ============================================================
@@ -994,8 +1046,12 @@ function fuzzyMatch(name) {
     if (p.name.toLowerCase() === n) return p;
   }
 
-  // 3. n is contained in exactly ONE product's name (avoids "brownie" matching multiple)
-  const containedIn = PRODUCTS.filter(p => p.name.toLowerCase().includes(n));
+  // 3. n is a whole-word match contained in exactly ONE product's name
+  // e.g. "cookie" matches "Cookie Dough Brownies" but "cheese" does NOT match "Cheesecake"
+  // because "cheese" is not a whole word in "cheesecake"
+  const nEscaped = n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const nWordRe = new RegExp(`\\b${nEscaped}\\b`);
+  const containedIn = PRODUCTS.filter(p => nWordRe.test(p.name.toLowerCase()));
   if (containedIn.length === 1) return containedIn[0];
 
   // 4. Product name contained in n (POS name is more verbose)
@@ -1006,11 +1062,11 @@ function fuzzyMatch(name) {
     return containsProduct.sort((a,b) => b.name.length - a.name.length)[0];
   }
 
-  // 5. Word overlap (4+ char words)
-  const nWords = n.split(/[\s()+,\-]+/).filter(w => w.length >= 3);
+  // 5. Word overlap — require 5+ char words to avoid short words like "cake" matching "cupcake"
+  const nWords = n.split(/[\s()+,\-]+/).filter(w => w.length >= 4);
   let bestMatch = null, bestScore = 0;
   for (const p of PRODUCTS) {
-    const pWords = p.name.toLowerCase().split(/\s+/).filter(w => w.length >= 4);
+    const pWords = p.name.toLowerCase().split(/\s+/).filter(w => w.length >= 5);
     const hits = pWords.filter(pw => nWords.some(nw => nw.includes(pw) || pw.includes(nw)));
     const score = hits.length / Math.max(pWords.length, 1);
     if (hits.length >= 2 && score > bestScore) { bestScore = score; bestMatch = p; }
@@ -1161,8 +1217,51 @@ function renderProduction() {
       const made      = getMade(p.id);
       const effectiveSold = sold + wasted;
       const stockpile = getStockpile(p.id);
-      const needed    = Math.max(0, Math.round((effectiveSold * adj) + stockpile - inStock));
-      const batches   = p.ppb > 1 ? Math.ceil(needed / p.ppb) : needed;
+      let needed, batches, batchesDisplay;
+
+      if (p.derivedFrom && p.derivedFrom.type === 'combined') {
+        // BROWNIE BASES: sum pcs needed for cookie dough + fudge + german brownies, divide by 24
+        let totalPcsNeeded = 0;
+        p.derivedFrom.products.forEach(srcId => {
+          const srcProd = PRODUCTS.find(pr => pr.id === srcId);
+          const srcEffSold = getSold(srcId) + getWasted(srcId);
+          const srcStockpile = getStockpile(srcId);
+          const srcInStock = getInStock(srcId);
+          const srcNeededPcs = Math.max(0, (srcEffSold * adj) + srcStockpile - srcInStock);
+          totalPcsNeeded += srcNeededPcs;
+        });
+        const rawBases = totalPcsNeeded / p.derivedFrom.piecesPerBase; // e.g. 65/24 = 2.7
+        needed = Math.max(0, rawBases - inStock);
+        const basesNum = rawBases % 1 === 0 ? rawBases : parseFloat(rawBases.toFixed(1));
+        batchesDisplay = rawBases > 0 ? `${basesNum} bases needed` : '—';
+        batches = batchesDisplay;
+
+      } else if (p.derivedFrom && p.derivedFrom.type === 'single') {
+        // CARROT CAKE or CHEESECAKE BASES: derived from one source product
+        const srcProd = PRODUCTS.find(pr => pr.id === p.derivedFrom.productId);
+        const srcEffSold = getSold(srcProd.id) + getWasted(srcProd.id);
+        const srcStockpile = getStockpile(srcProd.id);
+        const srcInStock = getInStock(srcProd.id);
+        const srcNeededPcs = Math.max(0, (srcEffSold * adj) + srcStockpile - srcInStock);
+        const srcBatches = srcNeededPcs / p.derivedFrom.pcsPerBatch;         // e.g. 24/48 = 0.5 batch
+        const rawBases = srcBatches * p.derivedFrom.basesPerBatch;           // e.g. 0.5 × 6 = 3 bases
+        needed = Math.max(0, Math.ceil(rawBases) - inStock);
+        // Show with decimal precision for batches, plus base count
+        const batchNum = parseFloat(srcBatches.toFixed(2));
+        if (p.derivedFrom.basesPerBatch === 1) {
+          // cheesecake: 1 base per batch, just show batches
+          batchesDisplay = rawBases > 0 ? `${batchNum} batch${batchNum !== 1 ? 'es' : ''} (${Math.ceil(rawBases)} base${Math.ceil(rawBases) !== 1 ? 's' : ''})` : '—';
+        } else {
+          // carrot cake: multiple bases per batch
+          batchesDisplay = rawBases > 0 ? `${batchNum} batch (${Math.ceil(rawBases)} bases)` : '—';
+        }
+        batches = batchesDisplay;
+      } else {
+        needed  = Math.max(0, Math.round((effectiveSold * adj) + stockpile - inStock));
+        batches = p.ppb > 1 ? Math.ceil(needed / p.ppb) : needed;
+        batchesDisplay = needed > 0 ? batches : '—';
+      }
+
       // Discrepancy: made + inStock_prev - effectiveSold vs current inStock
       // Simple version: if "made" entered → show made - effectiveSold (surplus from production)
       // Otherwise fall back to stock change
@@ -1183,7 +1282,7 @@ function renderProduction() {
             oninput="updateWasted('${p.id}',this.value)" onfocus="this.select()">
         </td>
         <td class="col-need ${needed>0?'td-needed':'td-ok'}">${needed>0?needed:'✓'}</td>
-        <td class="col-batch">${needed>0?batches:'—'}</td>
+        <td class="col-batch">${needed>0?batchesDisplay:'—'}</td>
         <td class="col-made">
           <input type="number" inputmode="numeric" class="mini-input col-made"
             value="${made||''}" placeholder="0"
